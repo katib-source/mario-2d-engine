@@ -80,6 +80,15 @@ public class GameRenderer {
      * @param level Le niveau
      */
     private void centerCameraOnPlayer(Player player, Level level) {
+        // If player is dead or inactive, keep camera at a valid position
+        if (!player.isActive() || player.getLives() <= 0) {
+            // Keep camera centered on level for game over screen
+            float halfWidth = camera.viewportWidth / 2;
+            float halfHeight = camera.viewportHeight / 2;
+            camera.position.set(halfWidth, halfHeight, 0);
+            return;
+        }
+        
         float targetX = player.getPosition().x + player.getWidth() / 2;
         float targetY = player.getPosition().y + player.getHeight() / 2;
         
