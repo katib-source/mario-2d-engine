@@ -62,7 +62,10 @@ public class Player extends Entity {
         // Debug: Check if player is falling off the world
         if (position.y < -100) {
             System.out.println("Player fell off the world at Y: " + position.y);
-            takeDamage(health); // Kill the player
+            // Force death - bypass invincibility and ensure health is 0
+            health = 0;
+            invincibilityTimer = 0;
+            die();
             return;
         }
         
@@ -159,7 +162,7 @@ public class Player extends Entity {
      */
     private void die() {
         // Ne décrémenter les vies qu'une seule fois
-        if (lives > 0 && health == 0) {
+        if (lives > 0 && health <= 0 && active) {
             lives--;
             AudioManager.getInstance().playSound("die");
             System.out.println("Player died! Lives remaining: " + lives);
@@ -171,8 +174,13 @@ public class Player extends Entity {
             } else {
                 // Réinitialiser la santé pour la prochaine vie
                 health = 100;
+                invincibilityTimer = 0;
                 // Réinitialiser la position (sera géré par le GameController)
             }
+        } else if (lives <= 0 && health <= 0) {
+            // Ensure active is set to false even if called multiple times
+            active = false;
+            AudioManager.getInstance().stopMusic();
         }
     }
     
