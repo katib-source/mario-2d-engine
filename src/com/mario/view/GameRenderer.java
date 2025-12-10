@@ -21,7 +21,8 @@ import com.mario.model.level.Level;
 public class GameRenderer {
     private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
-    private OrthographicCamera camera;
+    private OrthographicCamera worldCamera;
+    private OrthographicCamera hudCamera;
     private BitmapFont font;
     private TextureManager textureManager;
     private TilesetRenderer tilesetRenderer;
@@ -34,9 +35,13 @@ public class GameRenderer {
     public GameRenderer() {
         this.batch = new SpriteBatch();
         this.shapeRenderer = new ShapeRenderer();
-        this.camera = new OrthographicCamera();
-        // Original Mario dimensions: 400x208
-        this.camera.setToOrtho(false, 400, 208);
+        
+        this.worldCamera = new OrthographicCamera();
+        this.worldCamera.setToOrtho(false, 400, 208);
+        
+        this.hudCamera = new OrthographicCamera();
+        this.hudCamera.setToOrtho(false, 400, 208);
+        
         this.font = new BitmapFont();
         this.font.setColor(Color.WHITE);
         this.textureManager = TextureManager.getInstance();
@@ -49,28 +54,25 @@ public class GameRenderer {
      * @param level Le niveau à rendre
      */
     public void render(Level level) {
-        // Charger les tilesets si le niveau change
         if (currentLevel != level) {
             currentLevel = level;
             tilesetRenderer.loadTilesets(level);
         }
         
-        camera.update();
-        batch.setProjectionMatrix(camera.combined);
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        
-        // Centrer la caméra sur le joueur
         if (level.getPlayer() != null) {
             centerCameraOnPlayer(level.getPlayer(), level);
         }
         
-        // Rendre les tiles du niveau
-        renderTiles(level);
+        worldCamera.update();
+        batch.setProjectionMatrix(worldCamera.combined);
+        shapeRenderer.setProjectionMatrix(worldCamera.combined);
         
-        // Rendre les entités
+        renderTiles(level);
         renderEntities(level);
         
-        // Rendre le HUD
+        hudCamera.update();
+        batch.setProjectionMatrix(hudCamera.combined);
+        
         renderHUD(level);
     }
     
@@ -80,21 +82,18 @@ public class GameRenderer {
      * @param level Le niveau
      */
     private void centerCameraOnPlayer(Player player, Level level) {
-        // If player is dead or inactive, keep camera at a valid position
         if (!player.isActive() || player.getLives() <= 0) {
-            // Keep camera centered on level for game over screen
-            float halfWidth = camera.viewportWidth / 2;
-            float halfHeight = camera.viewportHeight / 2;
-            camera.position.set(halfWidth, halfHeight, 0);
+            float halfWidth = worldCamera.viewportWidth / 2;
+            float halfHeight = worldCamera.viewportHeight / 2;
+            worldCamera.position.set(halfWidth, halfHeight, 0);
             return;
         }
         
         float targetX = player.getPosition().x + player.getWidth() / 2;
         float targetY = player.getPosition().y + player.getHeight() / 2;
         
-        // Limiter la caméra aux bords du niveau
-        float halfWidth = camera.viewportWidth / 2;
-        float halfHeight = camera.viewportHeight / 2;
+        float halfWidth = worldCamera.viewportWidth / 2;
+        float halfHeight = worldCamera.viewportHeight / 2;
         
         float levelWidth = level.getWidth() * level.getTileWidth();
         float levelHeight = level.getHeight() * level.getTileHeight();
@@ -102,7 +101,7 @@ public class GameRenderer {
         targetX = Math.max(halfWidth, Math.min(targetX, levelWidth - halfWidth));
         targetY = Math.max(halfHeight, Math.min(targetY, levelHeight - halfHeight));
         
-        camera.position.set(targetX, targetY, 0);
+        worldCamera.position.set(targetX, targetY, 0);
     }
     
     /**
@@ -275,6 +274,14 @@ public class GameRenderer {
     }
     
     public OrthographicCamera getCamera() {
-        return camera;
+        return worldCamera;
+    }
+    
+    public OrthographicCamera getWorldCamera() {
+        return worldCamera;
+    }
+    
+    public OrthographicCamera getHudCamera() {
+        return hudCamera;
     }
 }

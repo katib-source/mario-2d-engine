@@ -3,28 +3,15 @@ package com.mario.model.entity;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
-/**
- * Classe abstraite représentant une entité générique dans le jeu
- * Toutes les entités (joueur, ennemis, collectibles) héritent de cette classe
- * 
- * Pattern: Template Method et Héritage
- */
 public abstract class Entity {
-    protected Vector2 position;      // Position (x, y) de l'entité
-    protected Vector2 velocity;      // Vélocité (dx, dy) de l'entité
-    protected Rectangle bounds;      // Boîte de collision
-    protected float width;           // Largeur de l'entité
-    protected float height;          // Hauteur de l'entité
-    protected boolean active;        // L'entité est-elle active?
-    protected String type;           // Type de l'entité
+    protected Vector2 position;
+    protected Vector2 velocity;
+    protected Rectangle bounds;
+    protected float width;
+    protected float height;
+    protected boolean active;
+    protected String type;
     
-    /**
-     * Constructeur de l'entité
-     * @param x Position X initiale
-     * @param y Position Y initiale
-     * @param width Largeur de l'entité
-     * @param height Hauteur de l'entité
-     */
     public Entity(float x, float y, float width, float height) {
         this.position = new Vector2(x, y);
         this.velocity = new Vector2(0, 0);
@@ -34,39 +21,20 @@ public abstract class Entity {
         this.active = true;
     }
     
-    /**
-     * Met à jour l'entité à chaque frame
-     * Méthode abstraite à implémenter par les classes filles
-     * @param delta Temps écoulé depuis la dernière frame
-     */
     public abstract void update(float delta);
     
-    /**
-     * Met à jour la boîte de collision en fonction de la position
-     */
     protected void updateBounds() {
         bounds.setPosition(position.x, position.y);
     }
     
-    /**
-     * Vérifie si cette entité entre en collision avec une autre
-     * @param other L'autre entité
-     * @return true si collision détectée
-     */
     public boolean collidesWith(Entity other) {
         return this.bounds.overlaps(other.getBounds());
     }
     
-    /**
-     * Vérifie si cette entité entre en collision avec un rectangle
-     * @param rect Le rectangle à tester
-     * @return true si collision détectée
-     */
     public boolean collidesWith(Rectangle rect) {
         return this.bounds.overlaps(rect);
     }
     
-    // Getters et Setters
     public Vector2 getPosition() {
         return position;
     }

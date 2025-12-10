@@ -2,42 +2,23 @@ package com.mario.model.entity;
 
 import com.mario.view.AudioManager;
 
-/**
- * Classe représentant une pièce à collecter
- * Implémente l'interface Collectible
- * 
- * Pattern: Implémentation d'interface + Héritage
- */
 public class Coin extends Entity implements Collectible {
-    private int scoreValue;      // Valeur en points
-    private boolean collected;   // A été collectée?
+    private int scoreValue;
+    private boolean collected;
     
-    /**
-     * Constructeur de la pièce
-     * @param x Position X
-     * @param y Position Y
-     * @param scoreValue Valeur de la pièce
-     */
     public Coin(float x, float y, int scoreValue) {
-        super(x, y, 16, 16); // Taille 16x16 pixels
+        super(x, y, 16, 16);
         this.type = "coin";
         this.scoreValue = scoreValue;
         this.collected = false;
     }
     
-    /**
-     * Constructeur avec valeur par défaut
-     * @param x Position X
-     * @param y Position Y
-     */
     public Coin(float x, float y) {
-        this(x, y, 10); // Valeur par défaut: 10 points
+        this(x, y, 10);
     }
     
     @Override
     public void update(float delta) {
-        // Les pièces peuvent avoir une animation de rotation
-        // Pour l'instant, elles restent statiques
     }
     
     @Override
@@ -45,7 +26,7 @@ public class Coin extends Entity implements Collectible {
         if (!collected) {
             player.addScore(scoreValue);
             collected = true;
-            active = false; // Désactiver la pièce après collecte
+            active = false;
             AudioManager.getInstance().playSound("coin");
         }
     }

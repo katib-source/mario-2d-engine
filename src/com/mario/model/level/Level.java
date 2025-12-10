@@ -7,30 +7,19 @@ import com.badlogic.gdx.math.Rectangle;
 import com.mario.model.entity.Entity;
 import com.mario.model.entity.Player;
 
-/**
- * Classe représentant un niveau de jeu
- * Contient les entités, les tiles, et la logique du niveau
- */
 public class Level {
-    private int width;           // Largeur en tiles
-    private int height;          // Hauteur en tiles
-    private int tileWidth;       // Largeur d'une tile en pixels
-    private int tileHeight;      // Hauteur d'une tile en pixels
+    private int width;
+    private int height;
+    private int tileWidth;
+    private int tileHeight;
     
-    private List<Entity> entities;           // Liste de toutes les entités
-    private List<Rectangle> solidTiles;      // Tiles solides (obstacles)
-    private Player player;                   // Référence au joueur
+    private List<Entity> entities;
+    private List<Rectangle> solidTiles;
+    private Player player;
     
-    private List<TileLayer> tileLayers;      // Couches de tiles
-    private List<LevelData.Tileset> tilesets; // Tilesets utilisés
+    private List<TileLayer> tileLayers;
+    private List<LevelData.Tileset> tilesets;
     
-    /**
-     * Constructeur du niveau
-     * @param width Largeur en tiles
-     * @param height Hauteur en tiles
-     * @param tileWidth Largeur d'une tile
-     * @param tileHeight Hauteur d'une tile
-     */
     public Level(int width, int height, int tileWidth, int tileHeight) {
         this.width = width;
         this.height = height;
@@ -42,10 +31,6 @@ public class Level {
         this.tilesets = new ArrayList<>();
     }
     
-    /**
-     * Ajoute une entité au niveau
-     * @param entity Entité à ajouter
-     */
     public void addEntity(Entity entity) {
         entities.add(entity);
         if (entity instanceof Player) {
@@ -53,56 +38,43 @@ public class Level {
         }
     }
     
-    /**
-     * Ajoute une couche de tiles
-     * @param name Nom de la couche
-     * @param data Données de la couche
-     */
     public void addTileLayer(String name, int[] data) {
         TileLayer layer = new TileLayer(name, data, width, height);
         tileLayers.add(layer);
         
-        // Si c'est une couche de collision, créer les rectangles de collision
         if (name.toLowerCase().contains("collision") || name.toLowerCase().contains("solid")) {
             createCollisionTiles(data);
         }
     }
     
-    /**
-     * Crée des rectangles de collision à partir des données de tiles
-     * @param data Données de tiles
-     */
     private void createCollisionTiles(int[] data) {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int index = y * width + x;
                 if (index < data.length && data[index] != 0) {
-                    // Tile non vide = solide
                     float tileX = x * tileWidth;
-                    float tileY = (height - y - 1) * tileHeight; // Inversion Y
+                    float tileY = (height - y - 1) * tileHeight;
                     solidTiles.add(new Rectangle(tileX, tileY, tileWidth, tileHeight));
                 }
             }
         }
     }
     
-    /**
-     * Met à jour toutes les entités du niveau
-     * @param delta Temps écoulé
-     */
     public void update(float delta) {
-        // Mettre à jour toutes les entités
-        for (Entity entity : entities) {
+        for (int i = 0; i < entities.size(); i++) {
+            Entity entity = entities.get(i);
             if (entity.isActive()) {
                 entity.update(delta);
             }
         }
         
-        // Supprimer les entités inactives
-        entities.removeIf(entity -> !entity.isActive());
+        for (int i = entities.size() - 1; i >= 0; i--) {
+            if (!entities.get(i).isActive()) {
+                entities.remove(i);
+            }
+        }
     }
     
-    // Getters
     public List<Entity> getEntities() {
         return entities;
     }
@@ -143,9 +115,6 @@ public class Level {
         this.tilesets = tilesets;
     }
     
-    /**
-     * Classe interne représentant une couche de tiles
-     */
     public static class TileLayer {
         private String name;
         private int[] data;
