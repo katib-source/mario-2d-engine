@@ -6,15 +6,37 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Color;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Gestionnaire de textures pour le jeu
  * Pattern: Singleton - Une seule instance pour gérer toutes les textures
+ *
+ * Also provides a registry of supported entity types with valid sprites.
  */
 public class TextureManager {
     private static TextureManager instance;
     private Map<String, Texture> textures;
+
+    /**
+     * Set of enemy types that have valid sprites/animations.
+     * Only these enemies will be spawned from Tiled maps.
+     */
+    private static final Set<String> SUPPORTED_ENEMY_TYPES = new HashSet<>();
+
+    /**
+     * Tracks which unsupported types we've already warned about.
+     */
+    private static final Set<String> warnedUnsupportedTypes = new HashSet<>();
+
+    static {
+        // Enemies with valid sprites (from assets/textures/entities/)
+        SUPPORTED_ENEMY_TYPES.add("goomba");      // goomba.png
+        SUPPORTED_ENEMY_TYPES.add("koopa");       // turtle.png
+        SUPPORTED_ENEMY_TYPES.add("turtle");      // turtle.png (alias)
+    }
 
     private TextureManager() {
         textures = new HashMap<>();
@@ -26,6 +48,53 @@ public class TextureManager {
             instance = new TextureManager();
         }
         return instance;
+    }
+
+    /**
+     * Checks if an enemy type has a valid sprite and is supported for spawning.
+     * @param enemyType The enemy type (e.g., "goomba", "koopa")
+     * @return true if the enemy type has a valid sprite
+     */
+    public static boolean isEnemyTypeSupported(String enemyType) {
+        if (enemyType == null) return false;
+        return SUPPORTED_ENEMY_TYPES.contains(enemyType.toLowerCase());
+    }
+
+    /**
+     * Logs a warning for an unsupported enemy type (only once per type).
+     * @param enemyType The unsupported enemy type
+     */
+    public static void warnUnsupportedEnemy(String enemyType) {
+        if (enemyType == null) return;
+        String type = enemyType.toLowerCase();
+        if (!warnedUnsupportedTypes.contains(type)) {
+            System.err.println("Skipped unsupported enemy type: " + type + " (missing skin)");
+            warnedUnsupportedTypes.add(type);
+        }
+    }
+
+    /**
+     * Gets sprite texture for an entity type.
+     * @param entityType The entity type
+     * @return Texture or null if not found
+     */
+    public Texture getSpriteForEntity(String entityType) {
+        if (entityType == null) return null;
+        String type = entityType.toLowerCase();
+
+        switch (type) {
+            case "player":
+                return textures.get("player");
+            case "goomba":
+                return textures.get("goomba");
+            case "koopa":
+            case "turtle":
+                return textures.get("goomba"); // Use goomba texture for turtles
+            case "coin":
+                return textures.get("coin");
+            default:
+                return null;
+        }
     }
 
     /**
