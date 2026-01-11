@@ -24,6 +24,13 @@ public class GameController extends ApplicationAdapter {
     private AudioManager audioManager;
     private String currentLevelPath;
     
+    // Level progression system
+    private int currentLevelNumber = 1;
+    private static final int MAX_LEVELS = 10; // Adjust based on how many levels you create
+    private boolean levelCompleted = false;
+    private float levelCompleteTimer = 0f;
+    private static final float LEVEL_COMPLETE_DELAY = 2.0f; // 2 seconds before loading next level
+    
     @Override
     public void create() {
         levelLoader = new LevelLoader();
@@ -32,7 +39,7 @@ public class GameController extends ApplicationAdapter {
         inputHandler = new InputHandler();
         audioManager = AudioManager.getInstance();
         
-        loadLevel("levels/level11.json");
+        loadLevelByNumber(1);
         audioManager.playMusic("main");
     }
     
@@ -40,11 +47,35 @@ public class GameController extends ApplicationAdapter {
         try {
             currentLevel = levelLoader.loadLevel(levelPath);
             currentLevelPath = levelPath;
+            levelCompleted = false;
+            levelCompleteTimer = 0f;
             System.out.println("Niveau chargé: " + levelPath);
         } catch (Exception e) {
             System.err.println("Erreur lors du chargement du niveau: " + e.getMessage());
             createTestLevel();
             currentLevelPath = null;
+        }
+    }
+    
+    /**
+     * Load a level by its number (1, 2, 3, etc.)
+     */
+    public void loadLevelByNumber(int levelNumber) {
+        currentLevelNumber = levelNumber;
+        String levelPath = "levels/level" + levelNumber + ".tmx";
+        loadLevel(levelPath);
+    }
+    
+    /**
+     * Load the next level in sequence
+     */
+    public void loadNextLevel() {
+        if (currentLevelNumber < MAX_LEVELS) {
+            loadLevelByNumber(currentLevelNumber + 1);
+        } else {
+            System.out.println("Congratulations! You completed all levels!");
+            // You can add a victory screen here
+            loadLevelByNumber(1); // Loop back to level 1
         }
     }
     
@@ -129,6 +160,34 @@ public class GameController extends ApplicationAdapter {
         
         currentLevel.update(delta);
         handleCollisions();
+        checkLevelCompletion(delta);
+    }
+    
+    /**
+     * Check if the player has reached the end of the level
+     */
+    private void checkLevelCompletion(float delta) {
+        if (currentLevel == null || currentLevel.getPlayer() == null) return;
+        if (levelCompleted) {
+            levelCompleteTimer += delta;
+            if (levelCompleteTimer >= LEVEL_COMPLETE_DELAY) {
+                loadNextLevel();
+            }
+            return;
+        }
+        
+        Player player = currentLevel.getPlayer();
+        if (!player.isActive()) return;
+        
+        // Calculate level end position (90% of level width)
+        float levelEndX = (currentLevel.getWidth() * currentLevel.getTileWidth()) * 0.9f;
+        
+        // Check if player reached the end
+        if (player.getPosition().x >= levelEndX) {
+            levelCompleted = true;
+            levelCompleteTimer = 0f;
+            System.out.println("Level " + currentLevelNumber + " completed! Loading next level...");
+        }
     }
     
     private void handleCollisions() {

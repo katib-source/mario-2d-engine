@@ -3,6 +3,7 @@ package com.mario.model.level;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.math.Rectangle;
 import com.mario.model.entity.Entity;
 import com.mario.model.entity.Player;
@@ -19,6 +20,9 @@ public class Level {
     
     private List<TileLayer> tileLayers;
     private List<LevelData.Tileset> tilesets;
+    
+    // NEW: Support for Tiled Map Editor
+    private TiledMap tiledMap;
     
     public Level(int width, int height, int tileWidth, int tileHeight) {
         this.width = width;
@@ -113,6 +117,18 @@ public class Level {
     
     public void setTilesets(List<LevelData.Tileset> tilesets) {
         this.tilesets = tilesets;
+    }
+    
+    public TiledMap getTiledMap() {
+        return tiledMap;
+    }
+    
+    public void setTiledMap(TiledMap tiledMap) {
+        this.tiledMap = tiledMap;
+    }
+    
+    public boolean hasTiledMap() {
+        return tiledMap != null;
     }
     
     public static class TileLayer {

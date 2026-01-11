@@ -87,17 +87,171 @@ public class LevelLoader {
     }
     
     /**
+     * Charge un niveau depuis un fichier JSON ou TMX
+     * @param levelPath Chemin vers le fichier du niveau
+     * @return Le niveau chargé
+     */
+    public Level loadLevel(String levelPath) {
+        // Detect file type and use appropriate loader
+        if (levelPath.endsWith(".tmx")) {
+            System.out.println("Loading TMX file: " + levelPath);
+            return loadTmxLevel(levelPath);
+        } else {
+            System.out.println("Loading JSON file: " + levelPath);
+            return loadJsonLevel(levelPath);
+        }
+    }
+    
+    /**
      * Charge un niveau depuis un fichier JSON
      * @param levelPath Chemin vers le fichier JSON du niveau
      * @return Le niveau chargé
      */
-    public Level loadLevel(String levelPath) {
+    private Level loadJsonLevel(String levelPath) {
         FileHandle file = Gdx.files.internal(levelPath);
         String jsonContent = file.readString();
         
         LevelData levelData = gson.fromJson(jsonContent, LevelData.class);
         
         return createLevelFromData(levelData);
+    }
+    
+    /**
+     * Charge un niveau depuis un fichier TMX (Tiled Map Editor)
+     * @param levelPath Chemin vers le fichier TMX du niveau
+     * @return Le niveau chargé
+     */
+    private Level loadTmxLevel(String levelPath) {
+        try {
+            com.badlogic.gdx.maps.tiled.TmxMapLoader tmxLoader = new com.badlogic.gdx.maps.tiled.TmxMapLoader();
+            com.badlogic.gdx.maps.tiled.TiledMap tiledMap = tmxLoader.load(levelPath);
+            
+            com.badlogic.gdx.maps.MapProperties mapProps = tiledMap.getProperties();
+            int mapWidth = mapProps.get("width", Integer.class);
+            int mapHeight = mapProps.get("height", Integer.class);
+            int tileWidth = mapProps.get("tilewidth", Integer.class);
+            int tileHeight = mapProps.get("tileheight", Integer.class);
+            
+            Level level = new Level(mapWidth, mapHeight, tileWidth, tileHeight);
+            
+            // Store the TiledMap reference for rendering
+            level.setTiledMap(tiledMap);
+            
+            // Process each layer
+            for (com.badlogic.gdx.maps.MapLayer layer : tiledMap.getLayers()) {
+                String layerName = layer.getName().toLowerCase();
+                System.out.println("Processing layer: " + layer.getName() + " (lowercase: " + layerName + ")");
+                
+                // Tile layers - check for blocked tiles
+                if (layer instanceof com.badlogic.gdx.maps.tiled.TiledMapTileLayer) {
+                    loadTmxTileLayerCollision((com.badlogic.gdx.maps.tiled.TiledMapTileLayer) layer, level);
+                }
+                // Object layers - for entities and collision
+                else {
+                    if (layerName.contains("player") || layerName.contains("spawn")) {
+                        loadTmxPlayerLayer(layer, level);
+                    } else if (layerName.contains("enemies") || layerName.contains("goomba") || layerName.contains("turtle")) {
+                        loadTmxEnemyLayer(layer, level);
+                    } else if (layerName.contains("coin")) {
+                        loadTmxCoinLayer(layer, level);
+                    } else if (layerName.contains("ground") || layerName.contains("collision")) {
+                        loadTmxCollisionLayer(layer, level);
+                    }
+                }
+            }
+            
+            System.out.println("TMX map loaded successfully: " + mapWidth + "x" + mapHeight);
+            return level;
+        } catch (Exception e) {
+            System.err.println("Failed to load TMX file: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to load TMX file: " + levelPath, e);
+        }
+    }
+    
+    private void loadTmxPlayerLayer(com.badlogic.gdx.maps.MapLayer layer, Level level) {
+        System.out.println("Loading player from layer: " + layer.getName());
+        for (com.badlogic.gdx.maps.MapObject object : layer.getObjects()) {
+            if (object instanceof com.badlogic.gdx.maps.objects.RectangleMapObject) {
+                Rectangle rect = ((com.badlogic.gdx.maps.objects.RectangleMapObject) object).getRectangle();
+                Player player = new Player(rect.x, rect.y);
+                level.addEntity(player);
+                System.out.println("Player spawned at: " + rect.x + ", " + rect.y);
+                break;
+            }
+        }
+    }
+    
+    private void loadTmxEnemyLayer(com.badlogic.gdx.maps.MapLayer layer, Level level) {
+        int enemyCount = 0;
+        for (com.badlogic.gdx.maps.MapObject object : layer.getObjects()) {
+            if (object instanceof com.badlogic.gdx.maps.objects.RectangleMapObject) {
+                Rectangle rect = ((com.badlogic.gdx.maps.objects.RectangleMapObject) object).getRectangle();
+                level.addEntity(new Goomba(rect.x, rect.y));
+                enemyCount++;
+            }
+        }
+        System.out.println("Loaded " + enemyCount + " enemies from layer: " + layer.getName());
+    }
+    
+    private void loadTmxCoinLayer(com.badlogic.gdx.maps.MapLayer layer, Level level) {
+        int coinCount = 0;
+        for (com.badlogic.gdx.maps.MapObject object : layer.getObjects()) {
+            if (object instanceof com.badlogic.gdx.maps.objects.RectangleMapObject) {
+                Rectangle rect = ((com.badlogic.gdx.maps.objects.RectangleMapObject) object).getRectangle();
+                level.addEntity(new Coin(rect.x, rect.y));
+                coinCount++;
+            }
+        }
+        System.out.println("Loaded " + coinCount + " coins from layer: " + layer.getName());
+    }
+    
+    private void loadTmxCollisionLayer(com.badlogic.gdx.maps.MapLayer layer, Level level) {
+        int objectCount = 0;
+        for (com.badlogic.gdx.maps.MapObject object : layer.getObjects()) {
+            if (object instanceof com.badlogic.gdx.maps.objects.RectangleMapObject) {
+                Rectangle rect = ((com.badlogic.gdx.maps.objects.RectangleMapObject) object).getRectangle();
+                level.getSolidTiles().add(rect);
+                objectCount++;
+            }
+        }
+        System.out.println("Loaded " + objectCount + " collision objects from layer: " + layer.getName());
+    }
+    
+    /**
+     * Load collision from tiles that have the "blocked" property
+     * @param tileLayer The tile layer to scan
+     * @param level The level to add collision to
+     */
+    private void loadTmxTileLayerCollision(com.badlogic.gdx.maps.tiled.TiledMapTileLayer tileLayer, Level level) {
+        int blockedTileCount = 0;
+        int layerWidth = tileLayer.getWidth();
+        int layerHeight = tileLayer.getHeight();
+        int tileWidth = (int) tileLayer.getTileWidth();
+        int tileHeight = (int) tileLayer.getTileHeight();
+        
+        for (int x = 0; x < layerWidth; x++) {
+            for (int y = 0; y < layerHeight; y++) {
+                com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell cell = tileLayer.getCell(x, y);
+                if (cell != null && cell.getTile() != null) {
+                    com.badlogic.gdx.maps.MapProperties tileProps = cell.getTile().getProperties();
+                    
+                    // Check if this tile has the "blocked" property
+                    if (tileProps.containsKey("blocked")) {
+                        // Create collision rectangle for this tile
+                        float tileX = x * tileWidth;
+                        float tileY = y * tileHeight;
+                        Rectangle collisionRect = new Rectangle(tileX, tileY, tileWidth, tileHeight);
+                        level.getSolidTiles().add(collisionRect);
+                        blockedTileCount++;
+                    }
+                }
+            }
+        }
+        
+        if (blockedTileCount > 0) {
+            System.out.println("Loaded " + blockedTileCount + " blocked tiles from layer: " + tileLayer.getName());
+        }
     }
     
     /**

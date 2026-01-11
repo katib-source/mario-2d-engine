@@ -27,6 +27,7 @@ public class GameRenderer {
     private TextureManager textureManager;
     private TilesetRenderer tilesetRenderer;
     private SpriteAnimator spriteAnimator;
+    private TiledMapRenderer tiledMapRenderer;
     private Level currentLevel; // Référence au niveau pour charger les tilesets
 
     /**
@@ -47,6 +48,7 @@ public class GameRenderer {
         this.textureManager = TextureManager.getInstance();
         this.tilesetRenderer = new TilesetRenderer();
         this.spriteAnimator = new SpriteAnimator();
+        this.tiledMapRenderer = new TiledMapRenderer();
     }
     
     /**
@@ -109,6 +111,13 @@ public class GameRenderer {
      * @param level Le niveau
      */
     private void renderTiles(Level level) {
+        // Render Tiled map if available
+        if (level.hasTiledMap()) {
+            tiledMapRenderer.render(level, worldCamera);
+            return;
+        }
+        
+        // Fallback to old tile rendering for JSON levels
         batch.begin();
 
         // Rendre les tiles depuis les tilesets (couche graphique)
@@ -271,6 +280,7 @@ public class GameRenderer {
         textureManager.dispose();
         tilesetRenderer.dispose();
         spriteAnimator.dispose();
+        tiledMapRenderer.dispose();
     }
     
     public OrthographicCamera getCamera() {
