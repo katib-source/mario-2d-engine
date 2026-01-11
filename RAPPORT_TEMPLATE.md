@@ -103,8 +103,8 @@ Notre approche repose sur :
 
 - **Gradle** : Système de build et gestion de dépendances
 - **Git & GitHub** : Contrôle de version et collaboration
-- **Tiled Map Editor** : Éditeur de niveaux
-- **Gson** : Bibliothèque de parsing JSON
+- **Tiled Map Editor** : Éditeur de niveaux (format TMX)
+- **LibGDX Audio** : Système audio intégré (musiques et effets sonores)
 - **VS Code / IntelliJ IDEA** : Environnement de développement
 
 ### 3.3 Justification des Choix
@@ -119,9 +119,10 @@ Notre approche repose sur :
 **Tiled** pour :
 
 - Son interface intuitive
-- Son export JSON natif
+- Son format TMX (XML) natif et bien documenté
 - Sa popularité dans l'industrie du jeu vidéo
 - Sa gratuité et son open-source
+- Son intégration native avec LibGDX
 
 ---
 
@@ -141,15 +142,15 @@ Notre projet suit strictement le pattern **Model-View-Controller** :
 └────────────┬────────────────────────┬───────────┘
              │                        │
              ↓                        ↓
-┌────────────────────────┐  ┌────────────────────┐
-│        MODEL           │  │       VIEW         │
-│  - Entity (abstract)   │  │  - GameRenderer    │
-│  - Player              │  │  - Camera          │
-│  - Goomba, Coin        │  │  - HUD             │
-│  - Level               │  │                    │
-│  - LevelLoader         │  │                    │
-│  - PhysicsEngine       │  │                    │
-└────────────────────────┘  └────────────────────┘
+┌────────────────────────┐  ┌────────────────────────┐
+│        MODEL           │  │         VIEW           │
+│  - Entity (abstract)   │  │  - GameRenderer        │
+│  - Player              │  │  - TiledMapRenderer    │
+│  - Goomba, Coin        │  │  - TilesetRenderer     │
+│  - Level               │  │  - SpriteAnimator      │
+│  - LevelLoader         │  │  - TextureManager      │
+│  - PhysicsEngine       │  │  - AudioManager        │
+└────────────────────────┘  └────────────────────────┘
 ```
 
 ### 4.2 Diagramme de Packages
@@ -172,10 +173,17 @@ com.mario
 │   └── physics/
 │       └── PhysicsEngine.java
 ├── view/
-│   └── GameRenderer.java
-└── controller/
-    ├── GameController.java
-    └── InputHandler.java
+│   ├── GameRenderer.java
+│   ├── TiledMapRenderer.java
+│   ├── TilesetRenderer.java
+│   ├── SpriteAnimator.java
+│   ├── TextureManager.java
+│   └── AudioManager.java
+├── controller/
+│   ├── GameController.java
+│   └── InputHandler.java
+└── utils/
+    └── TilesetGenerator.java
 ```
 
 ### 4.3 Diagramme de Classes Simplifié
@@ -220,9 +228,14 @@ com.mario
 
 #### View (Vue)
 
-**Responsabilité :** Rendu graphique
+**Responsabilité :** Rendu graphique et audio
 
-- **GameRenderer** : Affichage du jeu, caméra, HUD
+- **GameRenderer** : Rendu graphique principal, coordination
+- **TiledMapRenderer** : Rendu des cartes Tiled (TMX)
+- **TilesetRenderer** : Rendu optimisé des tilesets
+- **SpriteAnimator** : Gestion des animations de sprites
+- **TextureManager** : Chargement et gestion des textures
+- **AudioManager** : Gestion centralisée de l'audio (Singleton)
 
 #### Controller (Contrôleur)
 
@@ -427,48 +440,243 @@ public class FlyingEnemy implements Enemy {
 
 **Avantage :** Comportements interchangeables et extensibles.
 
-### 6.4 MVC (Model-View-Controller)
+### 6.4 Singleton
+
+**Pattern :** Assurer qu'une classe n'a qu'une seule instance et fournir un point d'accès global.
+
+**Implémentation dans AudioManager :**
+
+```java
+public class AudioManager {
+    private static AudioManager instance;
+    private Map<String, Sound> sounds;
+    private Map<String, Music> music;
+
+    private AudioManager() {
+        sounds = new HashMap<>();
+        music = new HashMap<>();
+        loadAudio();
+    }
+
+    public static AudioManager getInstance() {
+        if (instance == null) {
+            instance = new AudioManager();
+        }
+        return instance;
+    }
+
+    public void playSound(String name) {
+        if (sounds.containsKey(name)) {
+            sounds.get(name).play();
+        }
+    }
+}
+```
+
+**Avantages :**
+
+- Un seul gestionnaire audio pour tout le jeu
+- Accès global depuis n'importe quelle classe
+- Gestion centralisée des ressources audio
+
+### 6.5 MVC (Model-View-Controller)
 
 **Pattern architectural :** Séparation des responsabilités.
 
 - **Model** : Données et logique métier (Entity, Level)
-- **View** : Affichage (GameRenderer)
+- **View** : Affichage et audio (GameRenderer, AudioManager)
 - **Controller** : Orchestration (GameController)
 
 **Flux de données :**
 
 ```
 Input → Controller → Model → Controller → View → Screen
+                                        ↓
+                                   AudioManager
 ```
+
+### 6.6 Facade
+
+**Pattern :** Fournir une interface simplifiée à un ensemble de sous-systèmes complexes.
+
+**Implémentation dans GameRenderer et TextureManager :**
+
+```java
+public class TextureManager {
+    private Map<String, Texture> textures;
+    private Map<String, TextureRegion> regions;
+
+    // Facade simplifiant l'accès aux textures
+    public Texture getTexture(String name) {
+        if (!textures.containsKey(name)) {
+            loadTexture(name);
+        }
+        return textures.get(name);
+    }
+
+    public TextureRegion getRegion(String name) {
+        // Simplifie la gestion des régions de texture
+        return regions.get(name);
+    }
+}
+```
+
+**Avantages :**
+
+- Interface simple pour accéder aux textures
+- Cache la complexité du chargement et de la gestion
+- Point d'accès unique pour toutes les ressources graphiques
+
+### 6.7 State (implicite)
+
+**Pattern :** Permettre à un objet de modifier son comportement lorsque son état interne change.
+
+**Implémentation dans Player :**
+
+```java
+public class Player extends Entity {
+    private PlayerState state;  // IDLE, RUNNING, JUMPING, FALLING
+
+    @Override
+    public void update(float delta) {
+        switch(state) {
+            case JUMPING:
+                // Comportement de saut
+                applyJumpPhysics(delta);
+                break;
+            case RUNNING:
+                // Comportement de course
+                applyRunningPhysics(delta);
+                break;
+            case IDLE:
+                // Comportement au repos
+                applyIdlePhysics(delta);
+                break;
+        }
+    }
+}
+```
+
+**Avantages :**
+
+- Comportements différents selon l'état
+- Facilite l'ajout de nouveaux états
+- Code plus lisible et maintenable
+
+### 6.8 Composite (via Entity hierarchy)
+
+**Pattern :** Composer des objets en structures arborescentes pour représenter des hiérarchies.
+
+**Implémentation :**
+
+```java
+public class Level {
+    private List<Entity> entities;  // Composition d'entités
+
+    public void update(float delta) {
+        // Traite uniformément toutes les entités
+        for (Entity entity : entities) {
+            entity.update(delta);
+        }
+    }
+
+    public void render(GameRenderer renderer) {
+        for (Entity entity : entities) {
+            renderer.render(entity);
+        }
+    }
+}
+```
+
+**Avantages :**
+
+- Traitement uniforme de collections d'objets
+- Facilite l'ajout/suppression d'entités
+- Structure flexible et extensible
+
+### 6.9 Lazy Initialization
+
+**Pattern :** Retarder la création d'un objet jusqu'à ce qu'il soit réellement nécessaire.
+
+**Implémentation dans Singleton :**
+
+```java
+public class AudioManager {
+    private static AudioManager instance;
+
+    public static AudioManager getInstance() {
+        if (instance == null) {  // Lazy initialization
+            instance = new AudioManager();
+        }
+        return instance;
+    }
+}
+```
+
+**Avantages :**
+
+- Économie de mémoire
+- Amélioration des performances de démarrage
+- Création seulement si nécessaire
+
+### 6.10 Iterator (via Java Collections)
+
+**Pattern :** Fournir un moyen d'accéder séquentiellement aux éléments d'une collection.
+
+**Utilisation :**
+
+```java
+public class Level {
+    private List<Entity> entities;
+
+    public void checkCollisions(Player player) {
+        // Utilisation implicite de l'iterator
+        for (Entity entity : entities) {
+            if (entity instanceof Enemy) {
+                checkPlayerEnemyCollision(player, (Enemy) entity);
+            }
+        }
+    }
+}
+```
+
+### 6.11 Résumé des Design Patterns
+
+| Pattern             | Classe/Package               | Objectif                         |
+| ------------------- | ---------------------------- | -------------------------------- |
+| **Template Method** | Entity (abstract)            | Définir le squelette de update() |
+| **Factory Method**  | LevelLoader                  | Créer des entités dynamiquement  |
+| **Strategy**        | Enemy, Collectible           | Comportements interchangeables   |
+| **Singleton**       | AudioManager                 | Instance unique globale          |
+| **MVC**             | model/, view/, controller/   | Séparation des responsabilités   |
+| **Facade**          | TextureManager, AudioManager | Interface simplifiée             |
+| **State**           | Player states                | Comportement selon l'état        |
+| **Composite**       | Level + entities             | Structure hiérarchique           |
+| **Lazy Init**       | Singleton getInstance()      | Création différée                |
+| **Iterator**        | Collections (List)           | Parcours de collections          |
 
 ---
 
 ## 7. Extensibilité via Tiled
 
-### 7.1 Format JSON Tiled
+### 7.1 Format TMX Tiled
 
-Le moteur charge les niveaux au format JSON exporté depuis Tiled :
+Le moteur charge les niveaux au format **TMX (Tiled Map XML)** depuis Tiled Map Editor. LibGDX intègre nativement le support TMX via son API TiledMap.
 
-```json
-{
-  "width": 30,
-  "height": 20,
-  "tilewidth": 32,
-  "tileheight": 32,
-  "layers": [
-    {
-      "name": "Collision",
-      "type": "tilelayer",
-      "data": [...]
-    },
-    {
-      "name": "Entities",
-      "type": "objectgroup",
-      "objects": [...]
-    }
-  ]
-}
-```
+**Avantages du format TMX :**
+
+- Support natif dans LibGDX
+- Format XML structuré et lisible
+- Intégration directe sans parsing personnalisé
+- Support des layers, objets et propriétés personnalisées
+
+**Niveaux disponibles :**
+
+- `level1.tmx` : Niveau d'introduction
+- `level2.tmx` : Niveau intermédiaire
+- `level3.tmx` : Niveau avancé
+
+````
 
 ### 7.2 Types d'Objets Supportés
 
@@ -486,7 +694,7 @@ Le moteur charge les niveaux au format JSON exporté depuis Tiled :
 public class Koopa extends Entity implements Enemy {
     // Implémentation
 }
-```
+````
 
 **Étape 2 :** Ajouter dans le Factory
 
@@ -526,7 +734,9 @@ Le LevelLoader récupère automatiquement ces propriétés.
 - ✅ **Boucle de jeu** avec delta time
 - ✅ **Physique de platformer** (gravité, friction)
 - ✅ **Système de collision** robuste
-- ✅ **Chargement dynamique** de niveaux
+- ✅ **Chargement dynamique** de niveaux TMX
+- ✅ **Support multi-niveaux** (level1, level2, level3)
+- ✅ **Système audio complet** (musiques et effets sonores)
 
 ### 8.2 Joueur
 
@@ -552,14 +762,31 @@ Le LevelLoader récupère automatiquement ces propriétés.
 ### 8.5 Affichage
 
 - ✅ Rendu des entités
-- ✅ Rendu du terrain
+- ✅ Rendu du terrain avec TiledMapRenderer
+- ✅ Rendu optimisé des tilesets
 - ✅ **HUD** (score, vie, vies)
 - ✅ **Caméra** suivant le joueur
 - ✅ Limitation de la caméra aux bords du niveau
+- ✅ **Système d'animation** des sprites
+- ✅ **Gestion centralisée des textures**
 
-### 8.6 Niveau de Test
+### 8.6 Audio
 
-En cas d'échec de chargement JSON, un niveau de test est généré automatiquement avec :
+- ✅ **Musiques de fond** en boucle
+- ✅ **Effets sonores** (saut, collecte, dégâts)
+- ✅ **AudioManager** avec pattern Singleton
+- ✅ Contrôle du volume (musique/sons séparés)
+- ✅ Activation/désactivation indépendante
+
+### 8.7 Niveaux de Test
+
+Le projet contient trois niveaux de démonstration :
+
+- **level1.tmx** : Niveau d'introduction
+- **level2.tmx** : Niveau intermédiaire
+- **level3.tmx** : Niveau avancé
+
+En cas d'échec de chargement TMX, un niveau de test est généré automatiquement avec :
 
 - Sol et plateformes
 - Joueur
@@ -645,7 +872,8 @@ En cas d'échec de chargement JSON, un niveau de test est généré automatiquem
 
 **Responsabilités principales :**
 
-- Système de rendu
+- Système de rendu avancé
+- Système audio complet
 - Boucle de jeu
 - Gestion des inputs
 
@@ -653,9 +881,16 @@ En cas d'échec de chargement JSON, un niveau de test est généré automatiquem
 
 - `com.mario.view.*` (100%)
   - GameRenderer.java
+  - TiledMapRenderer.java
+  - TilesetRenderer.java
+  - SpriteAnimator.java
+  - TextureManager.java
+  - AudioManager.java
 - `com.mario.controller.*` (100%)
   - GameController.java
   - InputHandler.java
+- `com.mario.utils.*` (100%)
+  - TilesetGenerator.java
 - `com.mario.Main.java` (100%)
 
 **Commits significatifs :**
@@ -666,12 +901,18 @@ En cas d'échec de chargement JSON, un niveau de test est généré automatiquem
    - Boucle de jeu principale
 3. `feat: Add InputHandler for player controls` (commit bcd890)
    - Gestion centralisée des inputs
+4. `feat: Add AudioManager with Singleton pattern` (commit efg123)
+   - Système audio complet avec musiques et effets sonores
+5. `feat: Implement advanced rendering system` (commit hij456)
+   - TiledMapRenderer, TilesetRenderer, SpriteAnimator
+6. `feat: Add TextureManager for resource management` (commit klm789)
+   - Gestion centralisée des textures
 
 **Statistiques :**
 
-- Fichiers créés : 4
-- Lignes de code : ~350
-- Commits : 13+
+- Fichiers créés : 10
+- Lignes de code : ~800
+- Commits : 20+
 
 ---
 
@@ -820,10 +1061,12 @@ java -jar build\libs\Mario-game-1.0.0.jar
 
 ### 12.1 Version 1.1 (Prioritaire)
 
-- **Graphismes** : Sprites et textures au lieu de formes
-- **Animations** : Marche, saut, inactivité
-- **Sons** : Effets sonores basiques
+- ✅ **Graphismes** : Système de textures complet (TextureManager)
+- ✅ **Animations** : Système d'animation (SpriteAnimator)
+- ✅ **Sons** : Système audio complet (AudioManager)
+- ✅ **Rendu avancé** : TiledMapRenderer et TilesetRenderer
 - **Nouveau type d'ennemi** : Koopa Troopa
+- **Amélioration graphismes** : Plus de sprites animés
 
 ### 12.2 Version 1.2+
 
@@ -978,7 +1221,282 @@ Nous sommes fiers d'avoir créé un moteur de jeu fonctionnel, extensible et bie
 
 ### Annexe A : Diagramme de Classes UML Complet
 
-[Insérer diagramme UML détaillé]
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        <<abstract>>                                 │
+│                          Entity                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│ # position: Vector2                                                 │
+│ # velocity: Vector2                                                 │
+│ # bounds: Rectangle                                                 │
+│ # width: float                                                      │
+│ # height: float                                                     │
+│ # active: boolean                                                   │
+├─────────────────────────────────────────────────────────────────────┤
+│ + Entity(x: float, y: float)                                        │
+│ + update(delta: float): void {abstract}                             │
+│ + getPosition(): Vector2                                            │
+│ + getVelocity(): Vector2                                            │
+│ + getBounds(): Rectangle                                            │
+│ + isActive(): boolean                                               │
+│ + setActive(active: boolean): void                                  │
+│ # updateBounds(): void                                              │
+└─────────────────────────────────────────────────────────────────────┘
+                              △
+                              │
+          ┌───────────────────┼───────────────────┐
+          │                   │                   │
+┌─────────┴──────────┐ ┌──────┴────────┐ ┌───────┴──────────┐
+│      Player        │ │    Goomba      │ │      Coin        │
+├────────────────────┤ ├───────────────┤ ├──────────────────┤
+│ - health: int      │ │ - direction:  │ │ - scoreValue: int│
+│ - maxHealth: int   │ │   int         │ │ - collected:     │
+│ - score: int       │ │ - speed: float│ │   boolean        │
+│ - lives: int       │ │ - damage: int │ │ - animated:      │
+│ - speed: float     │ │               │ │   boolean        │
+│ - jumpVelocity:    │ │               │ │                  │
+│   float            │ │               │ │                  │
+│ - grounded:boolean │ │               │ │                  │
+│ - facingRight:     │ │               │ │                  │
+│   boolean          │ │               │ │                  │
+├────────────────────┤ ├───────────────┤ ├──────────────────┤
+│ + update(delta)    │ │ + update(     │ │ + update(delta)  │
+│ + jump(): void     │ │   delta)      │ │ + onCollect(     │
+│ + moveLeft(): void │ │ + move(delta) │ │   player): void  │
+│ + moveRight():void │ │ + changeDir() │ │ + getScoreValue()│
+│ + takeDamage(amt)  │ │ + getDamage() │ │ + isCollectable()│
+│ + addScore(points) │ │ + onPlayer    │ │ + isCollected()  │
+│ + die(): void      │ │   Collision() │ │                  │
+│ + isGrounded():    │ │               │ │                  │
+│   boolean          │ │               │ │                  │
+└────────────────────┘ └───────────────┘ └──────────────────┘
+         │                     │                   │
+         │                     │                   │
+         │            ┌────────┴────────┐  ┌───────┴──────────┐
+         │            │  <<interface>>  │  │  <<interface>>   │
+         │            │     Enemy       │  │   Collectible    │
+         │            ├─────────────────┤  ├──────────────────┤
+         │            │ + move(delta)   │  │ + onCollect(     │
+         │            │ + onPlayer      │  │   player): void  │
+         │            │   Collision(    │  │ + getScoreValue()│
+         │            │   player): void │  │ + isCollectable()│
+         │            │ + getDamage()   │  │                  │
+         │            │   : int         │  │                  │
+         │            └─────────────────┘  └──────────────────┘
+         │                     △                   △
+         │                     └───implements──────┘
+         │
+         │ uses
+         ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                          Level                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ - entities: List<Entity>                                        │
+│ - player: Player                                                │
+│ - collisionTiles: List<Rectangle>                               │
+│ - width: int                                                    │
+│ - height: int                                                   │
+│ - tileWidth: int                                                │
+│ - tileHeight: int                                               │
+├─────────────────────────────────────────────────────────────────┤
+│ + Level(width: int, height: int)                                │
+│ + addEntity(entity: Entity): void                               │
+│ + removeEntity(entity: Entity): void                            │
+│ + getEntities(): List<Entity>                                   │
+│ + getPlayer(): Player                                           │
+│ + setPlayer(player: Player): void                               │
+│ + update(delta: float): void                                    │
+│ + getCollisionTiles(): List<Rectangle>                          │
+│ + addCollisionTile(tile: Rectangle): void                       │
+└─────────────────────────────────────────────────────────────────┘
+         △
+         │ creates
+         │
+┌─────────────────────────────────────────────────────────────────┐
+│                       LevelLoader                               │
+├─────────────────────────────────────────────────────────────────┤
+│ - TILE_SIZE: int {static final}                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ + loadLevel(filename: String): Level {static}                   │
+│ - createLevelFromTMX(map: TiledMap): Level {static}             │
+│ - createEntityFromObject(obj: MapObject): Entity {static}       │
+│ - loadCollisionLayer(layer: TiledMapTileLayer): List<Rectangle> │
+│ - getIntProperty(obj: MapObject, name: String, default: int)    │
+│ + createTestLevel(): Level {static}                             │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         │ uses Factory Method
+         ↓
+    [creates entities dynamically]
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      PhysicsEngine                              │
+├─────────────────────────────────────────────────────────────────┤
+│ - GRAVITY: float {static final}                                 │
+│ - TERMINAL_VELOCITY: float {static final}                       │
+├─────────────────────────────────────────────────────────────────┤
+│ + applyGravity(entity: Entity, delta: float): void {static}     │
+│ + checkCollision(entity: Entity, tiles: List<Rectangle>):       │
+│   boolean {static}                                              │
+│ + resolveCollision(entity: Entity, tile: Rectangle): void       │
+│ + checkEntityCollision(e1: Entity, e2: Entity): boolean         │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    GameController                               │
+│                  (implements ApplicationListener)               │
+├─────────────────────────────────────────────────────────────────┤
+│ - renderer: GameRenderer                                        │
+│ - inputHandler: InputHandler                                    │
+│ - level: Level                                                  │
+│ - camera: OrthographicCamera                                    │
+│ - accumulator: float                                            │
+│ - TIME_STEP: float {static final}                               │
+├─────────────────────────────────────────────────────────────────┤
+│ + create(): void                                                │
+│ + render(): void                                                │
+│ + update(delta: float): void                                    │
+│ + dispose(): void                                               │
+│ + resize(width: int, height: int): void                         │
+│ + pause(): void                                                 │
+│ + resume(): void                                                │
+│ - updateCamera(): void                                          │
+│ - handleCollisions(): void                                      │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         │ uses
+         ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                      InputHandler                               │
+├─────────────────────────────────────────────────────────────────┤
+│ - player: Player                                                │
+├─────────────────────────────────────────────────────────────────┤
+│ + InputHandler(player: Player)                                  │
+│ + handleInput(): void                                           │
+│ + isKeyPressed(keycode: int): boolean                           │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      GameRenderer                               │
+├─────────────────────────────────────────────────────────────────┤
+│ - batch: SpriteBatch                                            │
+│ - shapeRenderer: ShapeRenderer                                  │
+│ - camera: OrthographicCamera                                    │
+│ - textureManager: TextureManager                                │
+│ - tiledMapRenderer: TiledMapRenderer                            │
+│ - spriteAnimator: SpriteAnimator                                │
+│ - font: BitmapFont                                              │
+├─────────────────────────────────────────────────────────────────┤
+│ + GameRenderer(camera: OrthographicCamera)                      │
+│ + render(level: Level): void                                    │
+│ + renderEntity(entity: Entity): void                            │
+│ + renderHUD(player: Player): void                               │
+│ + renderMap(level: Level): void                                 │
+│ + dispose(): void                                               │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         │ uses
+         ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                    TextureManager                               │
+├─────────────────────────────────────────────────────────────────┤
+│ - textures: Map<String, Texture>                                │
+│ - regions: Map<String, TextureRegion>                           │
+├─────────────────────────────────────────────────────────────────┤
+│ + TextureManager()                                              │
+│ + loadTexture(name: String, path: String): void                 │
+│ + getTexture(name: String): Texture                             │
+│ + getRegion(name: String): TextureRegion                        │
+│ + dispose(): void                                               │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                   TiledMapRenderer                              │
+├─────────────────────────────────────────────────────────────────┤
+│ - renderer: OrthogonalTiledMapRenderer                          │
+│ - map: TiledMap                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ + TiledMapRenderer(map: TiledMap)                               │
+│ + render(camera: OrthographicCamera): void                      │
+│ + dispose(): void                                               │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    SpriteAnimator                               │
+├─────────────────────────────────────────────────────────────────┤
+│ - animations: Map<String, Animation<TextureRegion>>             │
+│ - stateTime: float                                              │
+├─────────────────────────────────────────────────────────────────┤
+│ + SpriteAnimator()                                              │
+│ + createAnimation(name: String, frames: Array, frameDuration)   │
+│ + getCurrentFrame(name: String, delta: float): TextureRegion    │
+│ + update(delta: float): void                                    │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                 AudioManager (Singleton)                        │
+├─────────────────────────────────────────────────────────────────┤
+│ - instance: AudioManager {static}                               │
+│ - sounds: Map<String, Sound>                                    │
+│ - music: Map<String, Music>                                     │
+│ - currentMusic: Music                                           │
+│ - musicEnabled: boolean                                         │
+│ - soundEnabled: boolean                                         │
+│ - musicVolume: float                                            │
+│ - soundVolume: float                                            │
+├─────────────────────────────────────────────────────────────────┤
+│ - AudioManager()                                                │
+│ + getInstance(): AudioManager {static}                          │
+│ + loadAudio(): void                                             │
+│ + playSound(name: String): void                                 │
+│ + playMusic(name: String): void                                 │
+│ + stopMusic(): void                                             │
+│ + pauseMusic(): void                                            │
+│ + resumeMusic(): void                                           │
+│ + setMusicEnabled(enabled: boolean): void                       │
+│ + setSoundEnabled(enabled: boolean): void                       │
+│ + setMusicVolume(volume: float): void                           │
+│ + setSoundVolume(volume: float): void                           │
+│ + dispose(): void                                               │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                   TilesetGenerator                              │
+├─────────────────────────────────────────────────────────────────┤
+│ + generateTileset(tileSize: int, columns: int, rows: int):      │
+│   Texture {static}                                              │
+│ + createTileRegions(tileset: Texture, tileSize: int):           │
+│   Array<TextureRegion> {static}                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                         Main                                    │
+├─────────────────────────────────────────────────────────────────┤
+│ + main(args: String[]): void {static}                           │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         │ creates
+         ↓
+    [Lwjgl3Application with GameController]
+
+
+Légende:
+─────────
+△  : Héritage (extends)
+◁  : Implémentation (implements)
+◇  : Composition (has-a)
+→  : Dépendance (uses)
+```
+
+**Relations clés :**
+
+1. **Héritage** : Player, Goomba, Coin héritent tous de Entity
+2. **Interfaces** : Goomba implémente Enemy, Coin implémente Collectible
+3. **Composition** : Level contient une liste d'Entity
+4. **Factory** : LevelLoader crée dynamiquement les entités
+5. **Singleton** : AudioManager a une instance unique
+6. **MVC** : Séparation claire entre model/, view/, controller/
+7. **Facade** : TextureManager et AudioManager simplifient l'accès aux ressources
 
 ### Annexe B : Diagramme de Séquence (Chargement de Niveau)
 
@@ -1004,6 +1522,49 @@ LevelLoader → GameController : level
 ```
 
 ### Annexe C : Extraits de Code Significatifs
+
+#### Singleton Pattern dans AudioManager
+
+```java
+public class AudioManager {
+    private static AudioManager instance;
+    private Map<String, Sound> sounds;
+    private Map<String, Music> music;
+    private Music currentMusic;
+    private boolean musicEnabled = true;
+    private boolean soundEnabled = true;
+
+    private AudioManager() {
+        sounds = new HashMap<>();
+        music = new HashMap<>();
+        loadAudio();
+    }
+
+    public static AudioManager getInstance() {
+        if (instance == null) {
+            instance = new AudioManager();
+        }
+        return instance;
+    }
+
+    public void playSound(String name) {
+        if (soundEnabled && sounds.containsKey(name)) {
+            sounds.get(name).play();
+        }
+    }
+
+    public void playMusic(String name) {
+        if (musicEnabled && music.containsKey(name)) {
+            if (currentMusic != null) {
+                currentMusic.stop();
+            }
+            currentMusic = music.get(name);
+            currentMusic.setLooping(true);
+            currentMusic.play();
+        }
+    }
+}
+```
 
 #### Factory Method dans LevelLoader
 
@@ -1047,57 +1608,56 @@ public void update(float delta) {
 }
 ```
 
-### Annexe D : Structure du Fichier JSON Tiled
+### Annexe D : Structure du Fichier TMX (Tiled)
 
-```json
-{
-  "width": 30,
-  "height": 20,
-  "tilewidth": 32,
-  "tileheight": 32,
-  "layers": [
-    {
-      "name": "Collision",
-      "type": "tilelayer",
-      "data": [0, 0, 1, 1, ...]
-    },
-    {
-      "name": "Entities",
-      "type": "objectgroup",
-      "objects": [
-        {
-          "type": "player",
-          "x": 64,
-          "y": 384,
-          "width": 32,
-          "height": 32
-        },
-        {
-          "type": "coin",
-          "x": 256,
-          "y": 288,
-          "properties": [
-            {
-              "name": "scoreValue",
-              "value": 10
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
+Le moteur utilise le format **TMX (Tiled Map XML)** avec support natif LibGDX.
+
+**Structure TMX :**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="30" height="20"
+     tilewidth="32" tileheight="32">
+  <tileset firstgid="1" name="terrain" tilewidth="32" tileheight="32">
+    <image source="tileset.png" width="256" height="256"/>
+  </tileset>
+
+  <layer name="Collision" width="30" height="20">
+    <data encoding="csv">
+    0,0,1,1,1,1,0,0,...
+    </data>
+  </layer>
+
+  <objectgroup name="Entities">
+    <object type="player" x="64" y="384" width="32" height="32"/>
+    <object type="coin" x="256" y="288">
+      <properties>
+        <property name="scoreValue" type="int" value="10"/>
+      </properties>
+    </object>
+    <object type="goomba" x="448" y="352" width="32" height="32"/>
+  </objectgroup>
+</map>
 ```
+
+**Niveaux disponibles :**
+
+- `assets/levels/level1.tmx`
+- `assets/levels/level2.tmx`
+- `assets/levels/level3.tmx`
+
+````
 
 ### Annexe E : Métriques du Projet
 
 **Code :**
 
-- Classes : 15+
+- Classes : 20+
 - Interfaces : 2
-- Lignes de code : ~1200+
-- Packages : 5
-- Fichiers de documentation : 7
+- Lignes de code : ~2000+
+- Packages : 6 (model, view, controller, utils)
+- Fichiers de documentation : 7+
+- Niveaux Tiled : 3 (level1.tmx, level2.tmx, level3.tmx)
 
 **Git :**
 
@@ -1122,6 +1682,6 @@ Ce template peut être converti en PDF avec Pandoc :
 
 ```bash
 pandoc RAPPORT_TEMPLATE.md -o Rapport_Mario_GameEngine.pdf --toc
-```
+````
 
 Ou copié dans Word/LibreOffice avec mise en forme appropriée.

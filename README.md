@@ -29,19 +29,33 @@ src/com/mario/
 │   │   └── Collectible.java      # Interface Collectible
 │   ├── level/                     # Gestion des niveaux
 │   │   ├── Level.java            # Classe représentant un niveau
-│   │   ├── LevelData.java        # Structure de données JSON
+│   │   ├── LevelData.java        # Structure de données TMX
 │   │   └── LevelLoader.java      # Chargement depuis Tiled
 │   └── physics/                   # Moteur physique
 │       └── PhysicsEngine.java    # Gestion collisions/gravité
 ├── view/                          # VUE
-│   └── GameRenderer.java         # Rendu graphique
-└── controller/                    # CONTRÔLEUR
-    ├── GameController.java       # Boucle de jeu principale
-    └── InputHandler.java         # Gestion des inputs
+│   ├── GameRenderer.java         # Rendu graphique principal
+│   ├── TiledMapRenderer.java     # Rendu des cartes Tiled
+│   ├── TilesetRenderer.java      # Rendu des tilesets
+│   ├── SpriteAnimator.java       # Gestion des animations
+│   ├── TextureManager.java       # Gestion des textures
+│   └── AudioManager.java         # Gestion audio (Singleton)
+├── controller/                    # CONTRÔLEUR
+│   ├── GameController.java       # Boucle de jeu principale
+│   └── InputHandler.java         # Gestion des inputs
+└── utils/                         # UTILITAIRES
+    └── TilesetGenerator.java     # Génération de tilesets
 
 assets/
-└── levels/
-    └── level1.json               # Niveau exemple (format Tiled)
+├── levels/                        # Niveaux Tiled
+│   ├── level1.tmx                # Niveau 1 (format TMX)
+│   ├── level2.tmx                # Niveau 2
+│   └── level3.tmx                # Niveau 3
+├── audio/                         # Ressources audio
+│   ├── music/                    # Musiques de fond
+│   └── sounds/                   # Effets sonores
+└── textures/                      # Textures du jeu
+    └── entities/                 # Sprites des entités
 ```
 
 ### 📦 Concepts POO Utilisés
@@ -109,9 +123,9 @@ java -jar build\libs\Mario-game-1.0.0.jar
 
 ## 🗺️ Créer un Nouveau Niveau avec Tiled
 
-### 1. Structure du fichier JSON
+### 1. Structure du fichier TMX
 
-Le moteur charge automatiquement les niveaux au format JSON exporté depuis **Tiled**. Voici comment créer un nouveau niveau :
+Le moteur charge automatiquement les niveaux au format **TMX** (Tiled Map XML) depuis **Tiled Map Editor**. Voici comment créer un nouveau niveau :
 
 ### 2. Couches (Layers) à créer dans Tiled
 
@@ -149,10 +163,11 @@ Pour une pièce de 25 points :
 
 ### 5. Export depuis Tiled
 
-1. Créer votre carte dans Tiled
-2. Fichier → Exporter → JSON
-3. Placer le fichier dans `assets/levels/`
-4. Modifier `GameController.java` ligne 35 pour charger votre niveau
+1. Créer votre carte dans Tiled Map Editor
+2. Fichier → Enregistrer sous → Format TMX
+3. Placer le fichier `.tmx` dans `assets/levels/`
+4. Modifier `GameController.java` pour charger votre niveau
+5. Les niveaux disponibles : `level1.tmx`, `level2.tmx`, `level3.tmx`
 
 ## 🔧 Ajouter de Nouveaux Types d'Entités
 
@@ -183,9 +198,46 @@ Dans Tiled, créer un objet avec `type = "koopa"`.
 
 **Aucun changement dans le reste du code n'est nécessaire !**
 
+## 🎵 Système Audio
+
+Le moteur intègre un système audio complet géré par `AudioManager` (pattern Singleton) :
+
+### Fonctionnalités Audio
+
+- **Musiques de fond** : Lecture en boucle de musiques d'ambiance
+- **Effets sonores** : Sons pour sauts, collectes, dégâts, etc.
+- **Contrôle du volume** : Activation/désactivation séparée musique et sons
+- **Gestion centralisée** : Un seul point d'accès via `AudioManager.getInstance()`
+
+### Utilisation
+
+```java
+// Obtenir l'instance
+AudioManager audio = AudioManager.getInstance();
+
+// Jouer un effet sonore
+audio.playSound("jump");
+
+// Jouer une musique
+audio.playMusic("level1");
+
+// Activer/désactiver
+audio.setMusicEnabled(false);
+audio.setSoundEnabled(true);
+```
+
+### Structure des fichiers audio
+
+```
+assets/audio/
+├── music/          # Fichiers .ogg ou .mp3
+└── sounds/         # Fichiers .wav ou .ogg
+```
+
 ## 📊 Fonctionnalités Implémentées
 
-- ✅ Chargement de niveaux depuis JSON (Tiled)
+- ✅ Chargement de niveaux depuis TMX (Tiled Map Editor)
+- ✅ Support de multiples niveaux (level1, level2, level3)
 - ✅ Système de collision avec le terrain
 - ✅ Gravité et physique de platformer
 - ✅ Joueur avec mouvements et saut
@@ -194,6 +246,11 @@ Dans Tiled, créer un objet avec `type = "koopa"`.
 - ✅ Système de score et de vie
 - ✅ HUD affichant score, santé et vies
 - ✅ Caméra suivant le joueur
+- ✅ **Système audio complet** (musiques et effets sonores)
+- ✅ **Gestion avancée des textures et sprites**
+- ✅ **Système d'animation des sprites**
+- ✅ **Rendu optimisé avec TiledMapRenderer**
+- ✅ **AudioManager avec pattern Singleton**
 - ✅ Architecture MVC propre et documentée
 
 ## 📝 Structure des Dossiers
@@ -202,20 +259,29 @@ Dans Tiled, créer un objet avec `type = "koopa"`.
 Mario-game/
 ├── src/                    # Code source Java
 │   └── com/mario/          # Package principal
+│       ├── model/          # Modèle (entités, niveaux, physique)
+│       ├── view/           # Vue (rendu, audio, animations)
+│       ├── controller/     # Contrôleur (logique de jeu)
+│       └── utils/          # Utilitaires (génération tilesets)
 ├── assets/                 # Ressources du jeu
-│   └── levels/             # Fichiers JSON des niveaux
-├── lib/                    # Dépendances externes
+│   ├── levels/             # Fichiers TMX des niveaux
+│   ├── audio/              # Musiques et sons
+│   │   ├── music/          # Musiques de fond
+│   │   └── sounds/         # Effets sonores
+│   └── textures/           # Sprites et textures
+│       └── entities/       # Sprites des entités
 ├── build/                  # Fichiers compilés (généré)
 ├── build.gradle            # Configuration Gradle
 ├── settings.gradle         # Paramètres Gradle
 ├── gradlew.bat             # Wrapper Gradle (Windows)
 ├── run.bat                 # Script d'exécution rapide
+├── ARCHITECTURE.md         # Documentation architecture
 └── README.md               # Ce fichier
 ```
 
 ## 🧪 Tests
 
-Pour tester le moteur sans fichier JSON, un niveau de test est automatiquement créé en mémoire si le fichier `level1.json` n'est pas trouvé.
+Pour tester le moteur sans fichier TMX, un niveau de test est automatiquement créé en mémoire si le fichier `level1.tmx` n'est pas trouvé. Le projet contient actuellement trois niveaux de démonstration (`level1.tmx`, `level2.tmx`, `level3.tmx`).
 
 ## 📚 Documentation du Code
 
