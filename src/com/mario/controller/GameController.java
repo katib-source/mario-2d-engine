@@ -129,6 +129,8 @@ public class GameController extends ApplicationAdapter {
         
         float delta = Gdx.graphics.getDeltaTime();
         
+        // Update input buffer state
+        inputHandler.update(delta);
         handleInput();
         update(delta);
         renderer.render(currentLevel);

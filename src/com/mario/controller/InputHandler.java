@@ -6,6 +6,26 @@ import com.mario.model.entity.Player;
 
 public class InputHandler {
     
+    private float jumpBufferTime = 0f;
+    private static final float JUMP_BUFFER_DURATION = 0.15f; // 150ms buffer window
+    
+    /**
+     * Update the input handler state (call this before handlePlayerInput)
+     */
+    public void update(float deltaTime) {
+        // Decrease jump buffer timer
+        if (jumpBufferTime > 0) {
+            jumpBufferTime -= deltaTime;
+        }
+        
+        // Detect jump input and store it in buffer
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || 
+            Gdx.input.isKeyJustPressed(Input.Keys.UP) ||
+            Gdx.input.isKeyJustPressed(Input.Keys.Z)) {
+            jumpBufferTime = JUMP_BUFFER_DURATION;
+        }
+    }
+    
     public void handlePlayerInput(Player player) {
         if (player == null || !player.isActive()) return;
         
@@ -19,10 +39,10 @@ public class InputHandler {
             player.moveRight();
         }
         
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || 
-            Gdx.input.isKeyJustPressed(Input.Keys.UP) ||
-            Gdx.input.isKeyJustPressed(Input.Keys.Z)) {
+        // Use buffered jump - more responsive and forgiving
+        if (jumpBufferTime > 0 && player.isOnGround()) {
             player.jump();
+            jumpBufferTime = 0; // Consume the buffered jump
         }
     }
 }
