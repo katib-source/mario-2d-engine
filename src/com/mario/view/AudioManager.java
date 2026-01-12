@@ -7,21 +7,17 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 
-/**
- * Manages all game audio - music and sound effects
- * Pattern: Singleton
- */
 public class AudioManager {
     private static AudioManager instance;
-    private Map<String, Sound> sounds;
-    private Map<String, Music> music;
+    private final Map<String, Sound> sounds;
+    private final Map<String, Music> music;
     private Music currentMusic;
-    private boolean musicEnabled = true;
-    private boolean soundEnabled = true;
+    private final boolean musicEnabled = true;
+    private final boolean soundEnabled = true;
     
     private AudioManager() {
-        sounds = new HashMap<>();
-        music = new HashMap<>();
+        this.sounds = new HashMap<>();
+        this.music = new HashMap<>();
         loadAudio();
     }
     
@@ -32,9 +28,6 @@ public class AudioManager {
         return instance;
     }
     
-    /**
-     * Load all audio files
-     */
     private void loadAudio() {
         try {
             // Load music
@@ -56,9 +49,6 @@ public class AudioManager {
         }
     }
     
-    /**
-     * Play background music
-     */
     public void playMusic(String name) {
         if (!musicEnabled) return;
         
@@ -74,25 +64,16 @@ public class AudioManager {
         }
     }
     
-    /**
-     * Stop current music
-     */
     public void stopMusic() {
         if (currentMusic != null) {
             currentMusic.stop();
         }
     }
     
-    /**
-     * Play a sound effect
-     */
     public void playSound(String name) {
         playSound(name, 1.0f);
     }
     
-    /**
-     * Play a sound effect with custom volume
-     */
     public void playSound(String name, float volume) {
         if (!soundEnabled) return;
         
@@ -102,9 +83,6 @@ public class AudioManager {
         }
     }
     
-    /**
-     * Dispose of all audio resources
-     */
     public void dispose() {
         for (Sound sound : sounds.values()) {
             sound.dispose();

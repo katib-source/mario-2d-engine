@@ -14,25 +14,18 @@ import com.mario.model.entity.Goomba;
 import com.mario.model.entity.Player;
 import com.mario.model.level.Level;
 
-/**
- * Classe responsable du rendu graphique
- * Pattern: MVC - Vue
- */
 public class GameRenderer {
-    private SpriteBatch batch;
-    private ShapeRenderer shapeRenderer;
-    private OrthographicCamera worldCamera;
-    private OrthographicCamera hudCamera;
-    private BitmapFont font;
-    private TextureManager textureManager;
-    private TilesetRenderer tilesetRenderer;
-    private SpriteAnimator spriteAnimator;
-    private TiledMapRenderer tiledMapRenderer;
-    private Level currentLevel; // Référence au niveau pour charger les tilesets
+    private final SpriteBatch batch;
+    private final ShapeRenderer shapeRenderer;
+    private final OrthographicCamera worldCamera;
+    private final OrthographicCamera hudCamera;
+    private final BitmapFont font;
+    private final TextureManager textureManager;
+    private final TilesetRenderer tilesetRenderer;
+    private final SpriteAnimator spriteAnimator;
+    private final TiledMapRenderer tiledMapRenderer;
+    private Level currentLevel;
 
-    /**
-     * Constructeur du renderer
-     */
     public GameRenderer() {
         this.batch = new SpriteBatch();
         this.shapeRenderer = new ShapeRenderer();
@@ -51,10 +44,6 @@ public class GameRenderer {
         this.tiledMapRenderer = new TiledMapRenderer();
     }
     
-    /**
-     * Rend le niveau et toutes ses entités
-     * @param level Le niveau à rendre
-     */
     public void render(Level level) {
         if (currentLevel != level) {
             currentLevel = level;
@@ -78,11 +67,6 @@ public class GameRenderer {
         renderHUD(level);
     }
     
-    /**
-     * Centre la caméra sur le joueur
-     * @param player Le joueur
-     * @param level Le niveau
-     */
     private void centerCameraOnPlayer(Player player, Level level) {
         if (!player.isActive() || player.getLives() <= 0) {
             float halfWidth = worldCamera.viewportWidth / 2;
@@ -106,10 +90,6 @@ public class GameRenderer {
         worldCamera.position.set(targetX, targetY, 0);
     }
     
-    /**
-     * Rend les tiles du niveau
-     * @param level Le niveau
-     */
     private void renderTiles(Level level) {
         // Render Tiled map if available
         if (level.hasTiledMap()) {
@@ -139,10 +119,6 @@ public class GameRenderer {
         batch.end();
     }
     
-    /**
-     * Rend toutes les entités
-     * @param level Le niveau
-     */
     private void renderEntities(Level level) {
         batch.begin();
 
@@ -155,10 +131,6 @@ public class GameRenderer {
         batch.end();
     }
     
-    /**
-     * Rend une entité individuelle
-     * @param entity L'entité à rendre
-     */
     private void renderEntity(Entity entity) {
         Rectangle bounds = entity.getBounds();
         
@@ -174,9 +146,6 @@ public class GameRenderer {
         }
     }
     
-    /**
-     * Renders the player with animation
-     */
     private void renderPlayer(Player player, Rectangle bounds) {
         // Skip rendering every other frame if invincible (flashing effect)
         if (player.isInvincible()) {
@@ -186,7 +155,7 @@ public class GameRenderer {
             }
         }
         
-        TextureRegion frame = null;
+        TextureRegion frame;
         
         if (player.isJumping()) {
             // Jumping sprite
@@ -218,9 +187,6 @@ public class GameRenderer {
         }
     }
     
-    /**
-     * Renders a Goomba with animation
-     */
     private void renderGoomba(Goomba goomba, Rectangle bounds) {
         TextureRegion frame = spriteAnimator.getAnimationFrame("goomba_walk", goomba.getStateTime(), true);
         
@@ -236,10 +202,6 @@ public class GameRenderer {
         }
     }
     
-    /**
-     * Rend l'interface utilisateur (HUD)
-     * @param level Le niveau
-     */
     private void renderHUD(Level level) {
         batch.begin();
         
@@ -270,9 +232,6 @@ public class GameRenderer {
         batch.end();
     }
     
-    /**
-     * Libère les ressources
-     */
     public void dispose() {
         batch.dispose();
         shapeRenderer.dispose();

@@ -5,23 +5,13 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.mario.model.level.Level;
 
-/**
- * Renders Tiled maps (.tmx files) efficiently
- * Uses LibGDX's built-in OrthogonalTiledMapRenderer
- */
 public class TiledMapRenderer {
     private OrthogonalTiledMapRenderer tiledRenderer;
     private TiledMap currentMap;
     
     public TiledMapRenderer() {
-        // Renderer will be created when a map is loaded
     }
     
-    /**
-     * Render the Tiled map for the given level
-     * @param level Level containing the TiledMap
-     * @param camera Camera for view frustum culling
-     */
     public void render(Level level, OrthographicCamera camera) {
         if (!level.hasTiledMap()) {
             return; // No Tiled map to render

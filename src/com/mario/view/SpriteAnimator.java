@@ -9,23 +9,16 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
 
-/**
- * Manages sprite animations for game entities
- * Creates and stores animations from sprite sheets
- */
 public class SpriteAnimator {
-    private Map<String, Animation<TextureRegion>> animations;
-    private Map<String, TextureRegion> staticSprites;
+    private final Map<String, Animation<TextureRegion>> animations;
+    private final Map<String, TextureRegion> staticSprites;
     
     public SpriteAnimator() {
-        animations = new HashMap<>();
-        staticSprites = new HashMap<>();
+        this.animations = new HashMap<>();
+        this.staticSprites = new HashMap<>();
         loadAnimations();
     }
     
-    /**
-     * Load all sprite animations from sprite sheets
-     */
     private void loadAnimations() {
         // Load Mario animations
         loadMarioAnimations();
@@ -39,9 +32,6 @@ public class SpriteAnimator {
         System.out.println("Loaded " + animations.size() + " animations and " + staticSprites.size() + " static sprites");
     }
     
-    /**
-     * Load Mario sprite animations
-     */
     private void loadMarioAnimations() {
         try {
             Texture marioSheet = new Texture(Gdx.files.internal("textures/entities/little_mario.png"));
@@ -68,9 +58,6 @@ public class SpriteAnimator {
         }
     }
     
-    /**
-     * Load Goomba sprite animations
-     */
     private void loadGoombaAnimations() {
         try {
             Texture goombaSheet = new Texture(Gdx.files.internal("textures/entities/goomba.png"));
@@ -92,9 +79,6 @@ public class SpriteAnimator {
         }
     }
     
-    /**
-     * Load Turtle sprite animations
-     */
     private void loadTurtleAnimations() {
         try {
             Texture turtleSheet = new Texture(Gdx.files.internal("textures/entities/turtle.png"));
@@ -115,24 +99,14 @@ public class SpriteAnimator {
         }
     }
     
-    /**
-     * Create fallback sprites when files can't be loaded
-     */
     private void createFallbackMarioSprites() {
-        // Create simple placeholder sprites if loading fails
         System.out.println("Using fallback sprites for Mario");
     }
     
-    /**
-     * Get a static sprite by name
-     */
     public TextureRegion getStaticSprite(String name) {
         return staticSprites.get(name);
     }
     
-    /**
-     * Get the current frame of an animation
-     */
     public TextureRegion getAnimationFrame(String animationName, float stateTime, boolean looping) {
         Animation<TextureRegion> animation = animations.get(animationName);
         if (animation != null) {
@@ -141,11 +115,6 @@ public class SpriteAnimator {
         return null;
     }
     
-    /**
-     * Dispose of all textures
-     */
     public void dispose() {
-        // TextureRegions don't need to be disposed, but textures do
-        // In a more complete implementation, we'd track textures separately
     }
 }

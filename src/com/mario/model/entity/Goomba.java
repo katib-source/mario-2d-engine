@@ -3,7 +3,7 @@ package com.mario.model.entity;
 public class Goomba extends Entity implements Enemy {
     private static final float MOVE_SPEED = 50f;
     private static final float GRAVITY = -800f;
-    private int damage;
+    private final int damage;
     private float direction;
     private float stateTime;
     

@@ -23,7 +23,7 @@ import com.mario.model.entity.Player;
 
 
 public class LevelLoader {
-    private Gson gson;
+    private final Gson gson;
     
     public LevelLoader() {
         this.gson = new GsonBuilder()
@@ -38,7 +38,7 @@ public class LevelLoader {
 
             var obj = json.getAsJsonObject();
 
-            // Désérialiser les champs standard
+            
             if (obj.has("name")) layer.setName(obj.get("name").getAsString());
             if (obj.has("type")) layer.setType(obj.get("type").getAsString());
             if (obj.has("visible")) layer.setVisible(obj.get("visible").getAsBoolean());
@@ -47,14 +47,11 @@ public class LevelLoader {
             if (obj.has("encoding")) layer.setEncoding(obj.get("encoding").getAsString());
             if (obj.has("compression")) layer.setCompression(obj.get("compression").getAsString());
 
-            // Gérer le champ "data" qui peut être un tableau ou une chaîne
             if (obj.has("data")) {
                 JsonElement dataElement = obj.get("data");
                 if (dataElement.isJsonPrimitive() && dataElement.getAsJsonPrimitive().isString()) {
-                    // Données compressées en base64
                     layer.setDataString(dataElement.getAsString());
                 } else if (dataElement.isJsonArray()) {
-                    // Données non compressées (tableau d'entiers)
                     var dataArray = dataElement.getAsJsonArray();
                     int[] data = new int[dataArray.size()];
                     for (int i = 0; i < dataArray.size(); i++) {
@@ -64,7 +61,6 @@ public class LevelLoader {
                 }
             }
 
-            // Gérer les objets pour les object layers
             if (obj.has("objects")) {
                 var objectsArray = obj.get("objects").getAsJsonArray();
                 List<LevelData.TiledObject> objects = new ArrayList<>();
@@ -78,12 +74,7 @@ public class LevelLoader {
             return layer;
         }
     }
-    
-    /**
-     * Charge un niveau depuis un fichier JSON ou TMX
-     * @param levelPath Chemin vers le fichier du niveau
-     * @return Le niveau chargé
-     */
+
     public Level loadLevel(String levelPath) {
         // Detect file type and use appropriate loader
         if (levelPath.endsWith(".tmx")) {
@@ -94,12 +85,7 @@ public class LevelLoader {
             return loadJsonLevel(levelPath);
         }
     }
-    
-    /**
-     * Charge un niveau depuis un fichier JSON
-     * @param levelPath Chemin vers le fichier JSON du niveau
-     * @return Le niveau chargé
-     */
+
     private Level loadJsonLevel(String levelPath) {
         FileHandle file = Gdx.files.internal(levelPath);
         String jsonContent = file.readString();
@@ -108,12 +94,7 @@ public class LevelLoader {
         
         return createLevelFromData(levelData);
     }
-    
-    /**
-     * Charge un niveau depuis un fichier TMX (Tiled Map Editor)
-     * @param levelPath Chemin vers le fichier TMX du niveau
-     * @return Le niveau chargé
-     */
+
     private Level loadTmxLevel(String levelPath) {
         try {
             com.badlogic.gdx.maps.tiled.TmxMapLoader tmxLoader = new com.badlogic.gdx.maps.tiled.TmxMapLoader();
@@ -127,7 +108,6 @@ public class LevelLoader {
             
             Level level = new Level(mapWidth, mapHeight, tileWidth, tileHeight);
             
-            // Store the TiledMap reference for rendering
             level.setTiledMap(tiledMap);
             
             // Process each layer
@@ -135,11 +115,11 @@ public class LevelLoader {
                 String layerName = layer.getName().toLowerCase();
                 System.out.println("Processing layer: " + layer.getName() + " (lowercase: " + layerName + ")");
                 
-                // Tile layers - check for blocked tiles
+                // Tile layers
                 if (layer instanceof com.badlogic.gdx.maps.tiled.TiledMapTileLayer) {
                     loadTmxTileLayerCollision((com.badlogic.gdx.maps.tiled.TiledMapTileLayer) layer, level);
                 }
-                // Object layers - for entities and collision
+                // Object layers 
                 else {
                     if (layerName.contains("player") || layerName.contains("spawn")) {
                         loadTmxPlayerLayer(layer, level);
@@ -213,19 +193,12 @@ public class LevelLoader {
         System.out.println("Loaded " + objectCount + " collision objects from layer: " + layer.getName());
     }
     
-    /**
-     * Load the end trigger from the "End" object layer
-     * Expects a RectangleMapObject with optional "nextLevel" property
-     */
     private void loadTmxEndTrigger(com.badlogic.gdx.maps.MapLayer layer, Level level) {
         for (com.badlogic.gdx.maps.MapObject object : layer.getObjects()) {
             if (object instanceof com.badlogic.gdx.maps.objects.RectangleMapObject) {
-                Rectangle rect = ((com.badlogic.gdx.maps.objects.RectangleMapObject) object).getRectangle();
-                
-                // Create end trigger with the rectangle bounds (already in world units)
+                Rectangle rect = ((com.badlogic.gdx.maps.objects.RectangleMapObject) object).getRectangle();      
                 EndTrigger endTrigger = new EndTrigger(rect);
-                
-                // Check for optional "nextLevel" property
+                // Check for optional nextLevel
                 Object nextLevelProp = object.getProperties().get("nextLevel");
                 if (nextLevelProp != null) {
                     endTrigger.setNextLevel(nextLevelProp.toString());
@@ -239,12 +212,7 @@ public class LevelLoader {
             }
         }
     }
-    
-    /**
-     * Load collision from tiles that have the "blocked" property
-     * @param tileLayer The tile layer to scan
-     * @param level The level to add collision to
-     */
+
     private void loadTmxTileLayerCollision(com.badlogic.gdx.maps.tiled.TiledMapTileLayer tileLayer, Level level) {
         int blockedTileCount = 0;
         int layerWidth = tileLayer.getWidth();
@@ -258,7 +226,7 @@ public class LevelLoader {
                 if (cell != null && cell.getTile() != null) {
                     com.badlogic.gdx.maps.MapProperties tileProps = cell.getTile().getProperties();
                     
-                    // Check if this tile has the "blocked" property
+                    // Check if this tile has the blocked property
                     if (tileProps.containsKey("blocked")) {
                         // Create collision rectangle for this tile
                         float tileX = x * tileWidth;
@@ -275,12 +243,7 @@ public class LevelLoader {
             System.out.println("Loaded " + blockedTileCount + " blocked tiles from layer: " + tileLayer.getName());
         }
     }
-    
-    /**
-     * Crée un objet Level à partir des données JSON
-     * @param levelData Données du niveau
-     * @return Le niveau créé
-     */
+
     private Level createLevelFromData(LevelData levelData) {
         Level level = new Level(
             levelData.getWidth(),
@@ -297,22 +260,18 @@ public class LevelLoader {
         // Charger les layers
         for (LevelData.Layer layer : levelData.getLayers()) {
             if (layer.getType().equals("tilelayer")) {
-                // Couche de tiles (terrain) - décompresser si nécessaire
                 int[] tileData = decompressTileData(layer);
                 if (tileData.length > 0) {
                     level.addTileLayer(layer.getName(), tileData);
                 }
             } else if (layer.getType().equals("objectgroup")) {
-                // Couche d'objets (entités)
                 String layerName = layer.getName().toLowerCase();
 
-                // Gérer les différents types de couches d'objets
                 if (layerName.contains("entities") || layerName.contains("goombas") ||
                     layerName.contains("turtles") || layerName.contains("coins")) {
                     loadEntitiesFromLayer(layer, level, levelData);
                 } else if (layerName.contains("ground") || layerName.contains("pipes") ||
                           layerName.contains("bricks")) {
-                    // Ces couches contiennent de la géométrie de collision
                     loadCollisionFromObjectLayer(layer, level, levelData);
                 }
             }
@@ -321,13 +280,6 @@ public class LevelLoader {
         return level;
     }
     
-    /**
-     * Charge les entités depuis une couche d'objets
-     * Pattern: Factory Method - Crée différents types d'entités
-     * @param layer Couche d'objets
-     * @param level Niveau où ajouter les entités
-     * @param levelData Données du niveau pour la conversion de coordonnées
-     */
     private void loadEntitiesFromLayer(LevelData.Layer layer, Level level, LevelData levelData) {
         if (layer.getObjects() == null) return;
         
@@ -362,14 +314,7 @@ public class LevelLoader {
                           (layer.getObjects() != null ? layer.getObjects().size() : 0) + " objects");
     }
     
-    /**
-     * Crée une entité à partir d'un objet Tiled
-     * Pattern: Factory Method - Permet l'extensibilité
-     * @param obj Objet Tiled
-     * @param levelData Données du niveau pour la conversion de coordonnées
-     * @param entityType Type d'entité à créer
-     * @return L'entité créée
-     */
+
     private Entity createEntityFromObject(LevelData.TiledObject obj, LevelData levelData, String entityType) {
         if (entityType == null || entityType.isEmpty()) {
             System.out.println("Objet sans type ignoré: " + obj.getName());
@@ -378,8 +323,6 @@ public class LevelLoader {
 
         String type = entityType.toLowerCase();
 
-        // Convertir les coordonnées Y de Tiled (top-left origin) vers LibGDX (bottom-left origin)
-        // Dans Tiled, Y augmente vers le bas. Dans LibGDX, Y augmente vers le haut.
         float x = obj.getX();
         float levelHeightInPixels = levelData.getHeight() * levelData.getTileheight();
         float y = levelHeightInPixels - obj.getY() - obj.getHeight();
@@ -407,12 +350,7 @@ public class LevelLoader {
         }
     }
     
-    /**
-     * Charge la géométrie de collision depuis une couche d'objets
-     * @param layer Couche d'objets
-     * @param level Niveau où ajouter la géométrie
-     * @param levelData Données du niveau pour la conversion de coordonnées
-     */
+
     private void loadCollisionFromObjectLayer(LevelData.Layer layer, Level level, LevelData levelData) {
         if (layer.getObjects() == null) return;
         
@@ -424,15 +362,13 @@ public class LevelLoader {
             if (obj.getWidth() <= 0 || obj.getHeight() <= 0) continue;
             
             // Convertir les coordonnées Y de Tiled vers LibGDX
-            // In Tiled: Y=0 is top, Y increases downward
-            // In LibGDX: Y=0 is bottom, Y increases upward
-            // We need to flip the Y coordinate
+        
             float x = obj.getX();
             float tiledY = obj.getY();
             float objectHeight = obj.getHeight();
             
             // Convert: LibGDX Y = (levelHeight - TiledY)
-            // The top of the object in Tiled becomes the bottom in LibGDX
+    
             float y = levelHeightInPixels - tiledY;
             
             // Créer un rectangle de collision
@@ -448,14 +384,7 @@ public class LevelLoader {
         
         System.out.println("Loaded " + objectsLoaded + " collision objects from layer: " + layer.getName());
     }
-    
-    /**
-     * Récupère une propriété entière depuis un objet Tiled
-     * @param obj Objet Tiled
-     * @param propertyName Nom de la propriété
-     * @param defaultValue Valeur par défaut
-     * @return La valeur de la propriété
-     */
+
     private int getIntProperty(LevelData.TiledObject obj, String propertyName, int defaultValue) {
         if (obj.getProperties() == null) return defaultValue;
         
@@ -468,30 +397,7 @@ public class LevelLoader {
         }
         return defaultValue;
     }
-    
-    /**
-     * Récupère une propriété chaîne depuis un objet Tiled
-     * @param obj Objet Tiled
-     * @param propertyName Nom de la propriété
-     * @param defaultValue Valeur par défaut
-     * @return La valeur de la propriété
-     */
-    private String getStringProperty(LevelData.TiledObject obj, String propertyName, String defaultValue) {
-        if (obj.getProperties() == null) return defaultValue;
-        
-        for (LevelData.Property prop : obj.getProperties()) {
-            if (prop.getName().equals(propertyName)) {
-                return prop.getValue().toString();
-            }
-        }
-        return defaultValue;
-    }
 
-    /**
-     * Décompresse les données de tiles si elles sont compressées
-     * @param layer La couche contenant les données
-     * @return Tableau d'entiers des IDs de tiles
-     */
     private int[] decompressTileData(LevelData.Layer layer) {
         // Si les données sont déjà un tableau, les retourner directement
         if (layer.getData() != null && layer.getData().length > 0) {
@@ -500,7 +406,6 @@ public class LevelLoader {
 
         // Sinon, décompresser depuis la chaîne encodée
         String dataString = layer.getDataString();
-        String encoding = layer.getEncoding();
         String compression = layer.getCompression();
 
         if (dataString == null || dataString.isEmpty()) {
@@ -517,7 +422,7 @@ public class LevelLoader {
                 Inflater inflater = new Inflater();
                 inflater.setInput(decodedData);
                 byte[] decompressedData = new byte[layer.getWidth() * layer.getHeight() * 4];
-                int decompressedSize = inflater.inflate(decompressedData);
+                inflater.inflate(decompressedData);
                 inflater.end();
                 decodedData = decompressedData;
             }

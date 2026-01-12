@@ -118,7 +118,7 @@
  </layer>
  <layer id="2" name="Graphic Layer" width="240" height="13">
   <data encoding="base64" compression="zlib">
-   eJztmEtOwzAQht3sgLYIWHXrJdAiAQWpN+MgPDaAuASPuwAXKa+JWqvTqceP2KmbYIlPiZyx/c/Ef1xzXwjxADwCb5lMpvFcAzfALWqbInz6VZ07dJxYef/HHLL+GYPOenOvyl0x86W6PgMvwGux8Gt5/ZrfvwMfwGex7Gncz1ZXrrZqDNM4da0Hm/425JD1uzPp+OtPhWlfpTHfwA/w6zkWrmustRG6HqqO19Qcsn53lH9jr6E6wXsrF4P3XHpV9wORPpd1AX9GuNiQGvn25fSoZ4M5uudtQ4oZtrhJQ34/Y+jeqjv32s7BLnt5JpMCKdrpX+o5dd6dFqse5vZfl/9xZTKpkKK9/s1k2owU8fzbFQtS5xUKPYcV6BxV53lqC2q7DQiH8X1iXYmRH9e3YMbFtebuXcb3mVMhhf7ehhTV+1JtVeutNFBs/Tj/9qBvH9gNXE9qXYaMsWmUv72fHHI7hGdHyJP7HrGbiimHlEiNB6WmllS/1HiF61u3dh02/Tr/lnvuEBGyB6t1mfr9+qw712+OLTfsyT24ngIHTLzNv5vgG1sOMd+BD9LgQdxG9UvGK7o2rD90T8L9qQZOE1d/nX/78713JBb3vu9gB+K6QG/N/h3DXBeIy4553Y1RnGpz/ebguDGZc4qeq/nPDDpUrK9+LofQ2tGxXHKI+Q5coetdzUnbqX6TV2g71U/Xh69+1V+ngdOE9Z+TbxDn3xPk3yuHdYQ5hpghMIrg33JbyiwTqz65zqu1SK2jbfwBM/WGfg==
+   eJztmMlOwzAQht3cWFoEnHo1N6BFAgpS34wHYbkA4iVY3gV4kbJN1I4yHTxe4rRZZIlPCcl4/I8zf0y4z5R6AB6Bt0Qi0Tq0moO/XwM3wC2JmRGkPKZxoWCO2Dwxc8fO2/Yakv45w956ay/LXTb3b37M/fkMvACvWeHX/Pi1OH8HPoDPbNnTdJxrXaW1xRy2PKvqB5f+LtSQ9Psz7YXrrwut3DHo02/gB/h1xNnWtareiO2HsvnaWkPS7w/6t+oeqhqtCujeKsXTPZcf8Xzo8T7oCvBjRYqNWaPQsZIevDdcYLrfNbTy26+mLfn7mcL3VtN3r+s72HYvkagTrbrpX+45/N6dZf89LO2/Pv/jSiTqQqvu+jeR6DJaVeffbVVQd12x8O+wjHxHrfJ7agPWdhNQHvlDYn2poj5pbCbkpWstnfvkD5kT0cp87kKr8mO5trLrjRo4rnGSf/swdgDsRPYT9mVMjqaR/+395FHbIdw7Ip7cC4htKrYa6kQbPKgNa8n1a4NXpLGr1m7Cpd/k33zPHRFi9mDsy7qfb0jf+b5zXLVRT+7C8RTYF+Jd/m2Cb1w1VPkMQtAWD9JrXL8WvGK6RvXH7kl0PNcgaZLW3+TfwWLvHaviPPQZbEHcNtBfs38nMNcF4bJn77sJicNrvu8cGjdhc87IfZz/zKIDY0P1SzXErh3P5VNDlc/AF97vOCe/zvXbvMKvc/28P0L143iTBkkT1X/O3kGSf0+If688+ohyDDEjYFyBf/NtKbEMrs1BQ/J0gdRvq+EPqOSAmw==
   </data>
  </layer>
  <objectgroup id="9" name="PlayerSpawn">
@@ -130,8 +130,8 @@
  </objectgroup>
  <objectgroup id="3" name="Ground">
   <object id="5" x="0" y="192" width="1104" height="18"/>
-  <object id="11" x="1153.67" y="192" width="238.333" height="16"/>
-  <object id="25" x="1440" y="192" width="1024" height="16"/>
+  <object id="11" x="1136.17" y="192.25" width="238.333" height="16"/>
+  <object id="25" x="1424.5" y="192" width="1039.5" height="16"/>
   <object id="26" x="2208" y="128" width="16" height="64"/>
   <object id="27" x="2192" y="144" width="16" height="48"/>
   <object id="28" x="2176" y="160" width="16" height="32"/>
@@ -171,7 +171,7 @@
   <object id="69" x="912" y="128" width="32" height="64"/>
  </objectgroup>
  <objectgroup id="10" name="End">
-  <object id="155" x="3571" y="1" width="28.5" height="188.5">
+  <object id="155" x="3573" y="1" width="28.5" height="188.5">
    <properties>
     <property name="End" value="End"/>
     <property name="nextLevel" value="level2.tmx"/>

@@ -59,18 +59,12 @@ public class GameController extends ApplicationAdapter {
         }
     }
     
-    /**
-     * Load a level by its number (1, 2, 3, etc.)
-     */
     public void loadLevelByNumber(int levelNumber) {
         currentLevelNumber = levelNumber;
         String levelPath = "levels/level" + levelNumber + ".tmx";
         loadLevel(levelPath);
     }
     
-    /**
-     * Load the next level in sequence
-     */
     public void loadNextLevel() {
         if (currentLevelNumber < MAX_LEVELS) {
             loadLevelByNumber(currentLevelNumber + 1);
@@ -81,9 +75,6 @@ public class GameController extends ApplicationAdapter {
         }
     }
     
-    /**
-     * Crée un niveau de test pour démonstration
-     */
     private void createTestLevel() {
         System.out.println("Création d'un niveau de test...");
         currentLevel = new Level(25, 15, 32, 32);
@@ -200,7 +191,6 @@ public class GameController extends ApplicationAdapter {
                 levelCompleteTimer = 0f;
                 nextLevelPath = endTrigger.getNextLevel();
                 System.out.println("Level " + currentLevelNumber + " completed! Loading next level...");
-                return;
             }
         } else {
             // Fallback: Calculate level end position (90% of level width)

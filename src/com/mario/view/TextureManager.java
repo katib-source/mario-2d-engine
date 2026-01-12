@@ -1,23 +1,18 @@
 package com.mario.view;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Color;
-
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Gestionnaire de textures pour le jeu
- * Pattern: Singleton - Une seule instance pour gérer toutes les textures
- */
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+
 public class TextureManager {
     private static TextureManager instance;
-    private Map<String, Texture> textures;
+    private final Map<String, Texture> textures;
 
     private TextureManager() {
-        textures = new HashMap<>();
+        this.textures = new HashMap<>();
         loadTextures();
     }
 
@@ -28,9 +23,6 @@ public class TextureManager {
         return instance;
     }
 
-    /**
-     * Charge toutes les textures du jeu
-     */
     private void loadTextures() {
         // Créer des textures procédurales temporaires
         // Vous pouvez remplacer cela par de vraies images plus tard
@@ -43,9 +35,6 @@ public class TextureManager {
         System.out.println("Textures chargées: " + textures.size() + " textures");
     }
 
-    /**
-     * Crée une texture procédurale pour le joueur (Mario)
-     */
     private Texture createPlayerTexture() {
         Pixmap pixmap = new Pixmap(32, 32, Pixmap.Format.RGBA8888);
 
@@ -79,9 +68,6 @@ public class TextureManager {
         return texture;
     }
 
-    /**
-     * Crée une texture procédurale pour le Goomba
-     */
     private Texture createGoombaTexture() {
         Pixmap pixmap = new Pixmap(32, 32, Pixmap.Format.RGBA8888);
 
@@ -117,9 +103,6 @@ public class TextureManager {
         return texture;
     }
 
-    /**
-     * Crée une texture procédurale pour la pièce
-     */
     private Texture createCoinTexture() {
         Pixmap pixmap = new Pixmap(16, 16, Pixmap.Format.RGBA8888);
 
@@ -141,9 +124,6 @@ public class TextureManager {
         return texture;
     }
 
-    /**
-     * Crée une texture procédurale pour les tuiles de sol
-     */
     private Texture createGroundTileTexture() {
         Pixmap pixmap = new Pixmap(32, 32, Pixmap.Format.RGBA8888);
 
@@ -168,9 +148,6 @@ public class TextureManager {
         return texture;
     }
 
-    /**
-     * Crée une texture procédurale pour les briques
-     */
     private Texture createBrickTileTexture() {
         Pixmap pixmap = new Pixmap(32, 32, Pixmap.Format.RGBA8888);
 
@@ -193,16 +170,10 @@ public class TextureManager {
         return texture;
     }
 
-    /**
-     * Récupère une texture par son nom
-     */
     public Texture getTexture(String name) {
         return textures.get(name);
     }
 
-    /**
-     * Libère toutes les textures
-     */
     public void dispose() {
         for (Texture texture : textures.values()) {
             texture.dispose();

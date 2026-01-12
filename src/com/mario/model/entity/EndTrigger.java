@@ -2,13 +2,9 @@ package com.mario.model.entity;
 
 import com.badlogic.gdx.math.Rectangle;
 
-/**
- * Represents an end-of-level trigger zone.
- * When the player overlaps this zone, the level is completed.
- */
 public class EndTrigger {
     
-    private Rectangle bounds;
+    private final Rectangle bounds;
     private String nextLevel; // Optional: path to next level (e.g., "level2.tmx")
     
     public EndTrigger(float x, float y, float width, float height) {

@@ -6,7 +6,7 @@ import com.mario.model.entity.Player;
 public class InputHandler {
     
     private float jumpBufferTime = 0f;
-    private static final float JUMP_BUFFER_DURATION = 0.15f; // 150ms buffer window
+    private static final float JUMP_BUFFER_DURATION = 0.15f; 
     
     public void update(float deltaTime) {
         // Decrease jump buffer timer

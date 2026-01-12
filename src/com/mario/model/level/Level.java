@@ -9,17 +9,17 @@ import com.mario.model.entity.Entity;
 import com.mario.model.entity.Player;
 
 public class Level {
-    private int width;
-    private int height;
-    private int tileWidth;
-    private int tileHeight;
+    private final int width;
+    private final int height;
+    private final int tileWidth;
+    private final int tileHeight;
     
-    private List<Entity> entities;
-    private List<Rectangle> solidTiles;
+    private final List<Entity> entities;
+    private final List<Rectangle> solidTiles;
     private Player player;
     private EndTrigger endTrigger;
     
-    private List<TileLayer> tileLayers;
+    private final List<TileLayer> tileLayers;
     private List<LevelData.Tileset> tilesets;
     
     private TiledMap tiledMap;
@@ -144,10 +144,10 @@ public class Level {
     }
     
     public static class TileLayer {
-        private String name;
-        private int[] data;
-        private int width;
-        private int height;
+        private final String name;
+        private final int[] data;
+        private final int width;
+        private final int height;
         
         public TileLayer(String name, int[] data, int width, int height) {
             this.name = name;

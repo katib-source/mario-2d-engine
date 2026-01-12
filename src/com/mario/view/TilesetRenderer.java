@@ -10,23 +10,15 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.mario.model.level.Level;
 import com.mario.model.level.LevelData;
 
-/**
- * Classe responsable du rendu des tilesets
- * Gère le chargement et le rendu des tiles depuis les tilesets Tiled
- */
 public class TilesetRenderer {
-    private Map<String, Texture> tilesetTextures;
-    private Map<String, TextureRegion[]> tilesetRegions;
+    private final Map<String, Texture> tilesetTextures;
+    private final Map<String, TextureRegion[]> tilesetRegions;
     
     public TilesetRenderer() {
         this.tilesetTextures = new HashMap<>();
         this.tilesetRegions = new HashMap<>();
     }
     
-    /**
-     * Charge les tilesets pour un niveau
-     * @param level Le niveau
-     */
     public void loadTilesets(Level level) {
         if (level.getTilesets() == null) return;
         
@@ -56,12 +48,6 @@ public class TilesetRenderer {
         }
     }
     
-    /**
-     * Crée les régions de texture pour un tileset
-     * @param texture Texture du tileset
-     * @param tileset Données du tileset
-     * @return Tableau de régions de texture
-     */
     private TextureRegion[] createTileRegions(Texture texture, LevelData.Tileset tileset) {
         int tileWidth = tileset.getTilewidth();
         int tileHeight = tileset.getTileheight();
@@ -86,12 +72,6 @@ public class TilesetRenderer {
         return regions;
     }
     
-    /**
-     * Rend une couche de tiles
-     * @param batch SpriteBatch pour le rendu
-     * @param level Le niveau
-     * @param layerName Nom de la couche à rendre
-     */
     public void renderTileLayer(SpriteBatch batch, Level level, String layerName) {
         if (level.getTilesets() == null || level.getTilesets().isEmpty()) {
             return;
@@ -144,9 +124,6 @@ public class TilesetRenderer {
         }
     }
     
-    /**
-     * Libère les ressources
-     */
     public void dispose() {
         for (Texture texture : tilesetTextures.values()) {
             texture.dispose();
