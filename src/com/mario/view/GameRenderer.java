@@ -99,15 +99,11 @@ public class GameRenderer {
         
         // Fallback to old tile rendering for JSON levels
         batch.begin();
-
         // Rendre les tiles depuis les tilesets (couche graphique)
         tilesetRenderer.renderTileLayer(batch, level, "Graphic Layer");
-        
         // Rendre aussi les tiles procédurales pour les couches de collision si nécessaire
         Texture groundTexture = textureManager.getTexture("tile_ground");
-
         // Rendre les tiles avec textures (fallback pour test)
-        // Cette partie n'est utilisée que si le tileset n'est pas chargé
         if (level.getTilesets() == null || level.getTilesets().isEmpty()) {
             for (Rectangle tile : level.getSolidTiles()) {
                 if (groundTexture != null) {

@@ -1,12 +1,25 @@
-# Mario Game Engine - LibGDX
+# Mario Game Engine
 
-A 2D platformer game engine built with LibGDX in Java. Levels are configured via Tiled Map Editor.
+Mario Game Engine est un moteur de jeu 2D de type platformer où le joueur contrôle un personnage à travers différents niveaux, collectant des pièces et évitant des ennemis. Le projet est développé en utilisant la bibliothèque LibGDX et l'outil Tiled pour la création de cartes.
 
-## Architecture
+## Prérequis
 
-MVC pattern with Factory Method for entity creation.
+- Java 17 ou version supérieure (JDK)
+- LibGDX : Version compatible avec le projet
+- Tiled : Utilisé pour la création des cartes
+- IDE recommandé : IntelliJ IDEA ou vs code
+## Installation
 
-## Quick Start
+Clonez ce dépôt sur votre machine locale en utilisant la commande suivante :
+
+```bash
+git clone https://github.com/katib-source/mario-2d-engine.git
+```
+
+
+## Compilation et Exécution
+
+Après avoir ouvert le projet, exécutez les commandes suivantes :
 
 ```bash
 # Windows
@@ -16,28 +29,47 @@ MVC pattern with Factory Method for entity creation.
 ./gradlew run
 ```
 
-## Creating Levels
+## Fonctionnalités
 
-1. Create map in Tiled Map Editor
-2. Add layers: `Collision` (tiles), `Entities` (objects)
-3. Supported entity types: `player`, `goomba`, `coin`
-4. Save as `.tmx` in `assets/levels/`
+- Naviguer dans les niveaux avec les touches du clavier.
+- Collecter des pièces pour augmenter le score.
+- Éviter ou éliminer les ennemis (Goombas).
+- Terminer le niveau en atteignant la fin de la carte.
+- Système audio intégré.
+- Caméra suivant le joueur.
 
-## Adding New Entities
+## Architecture du Jeu
 
-1. Create class extending `Entity`
-2. Register in `LevelLoader.createEntityFromObject()`
-3. Use in Tiled with matching `type`
+Le moteur du jeu est basé sur une architecture MVC avec plusieurs composants :
 
-## Features
+- **Entity** : Classe de base pour tous les objets du jeu.
+- **LevelLoader** : Gère le chargement des niveaux TMX.
+- **CollisionSystem** : Gère les collisions entre objets.
+- **Factory Method** : Pattern utilisé pour la création des entités.
+- **HUD** : Gère l'affichage du score et des informations.
 
-- TMX level loading
-- Collision & physics
-- Enemies & collectibles
-- Score system & HUD
-- Audio system
-- Camera following player
+## Création de Niveaux
 
-## License
+1. Créez une carte dans Tiled Map Editor.
+2. Ajoutez les calques : `Collision` (tuiles), `Entities` (objets).
+3. Types d'entités supportés : `player`, `goomba`, `coin`.
+4. Sauvegardez en `.tmx` dans `assets/levels/`.
 
-Educational project.
+## Ajout de Nouvelles Entités
+
+1. Créez une classe étendant `Entity`.
+2. Enregistrez dans `LevelLoader.createEntityFromObject()`.
+3. Utilisez dans Tiled avec le `type` correspondant.
+
+## Contributions
+
+Tous les membres ont contribué activement au code Java et ont travaillé ensemble pour intégrer de manière fluide les différents modules du jeu.
+
+## Perspectives
+
+Quelques améliorations possibles :
+
+- Ajouter des niveaux avec des difficultés croissantes.
+- Implémenter des power-ups (champignons, étoiles).
+- Ajouter des boss de fin de niveau.
+- Supporter les appareils mobiles Android.
