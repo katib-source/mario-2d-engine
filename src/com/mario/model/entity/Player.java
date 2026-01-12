@@ -19,7 +19,7 @@ public class Player extends Entity {
     private float invincibilityTimer;
     
     public Player(float x, float y) {
-        super(x, y, 32, 32);
+        super(x, y, 24, 30);
         this.type = "player";
         this.health = 100;
         this.score = 0;

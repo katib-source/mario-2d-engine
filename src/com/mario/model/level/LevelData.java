@@ -2,19 +2,15 @@ package com.mario.model.level;
 
 import java.util.List;
 
-/**
- * Classe représentant un niveau chargé depuis Tiled
- * Contient toutes les informations d'une carte
- */
+
 public class LevelData {
-    private int width;           // Largeur en tiles
-    private int height;          // Hauteur en tiles
-    private int tilewidth;       // Largeur d'une tile
-    private int tileheight;      // Hauteur d'une tile
-    private List<Layer> layers;  // Liste des couches
-    private List<Tileset> tilesets; // Liste des tilesets
+    private int width;           
+    private int height;          
+    private int tilewidth;       
+    private int tileheight;     
+    private List<Layer> layers;  
+    private List<Tileset> tilesets; 
     
-    // Getters et Setters
     public int getWidth() { return width; }
     public void setWidth(int width) { this.width = width; }
     
@@ -33,20 +29,18 @@ public class LevelData {
     public List<Tileset> getTilesets() { return tilesets; }
     public void setTilesets(List<Tileset> tilesets) { this.tilesets = tilesets; }
     
-    /**
-     * Classe interne représentant une couche
-     */
+
     public static class Layer {
         private String name;
         private String type;
-        private int[] data;      // Pour les couches de tiles (données non compressées)
-        private String dataString; // Pour les données compressées (Tiled exporte comme "data" string)
-        private List<TiledObject> objects; // Pour les couches d'objets
+        private int[] data;      
+        private String dataString; 
+        private List<TiledObject> objects; 
         private boolean visible;
-        private int width;       // Largeur de la couche
-        private int height;      // Hauteur de la couche
-        private String encoding; // Type d'encodage (base64, csv, etc.)
-        private String compression; // Type de compression (zlib, gzip, etc.)
+        private int width;    
+        private int height;   
+        private String encoding; 
+        private String compression; 
 
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
@@ -79,9 +73,7 @@ public class LevelData {
         public void setCompression(String compression) { this.compression = compression; }
     }
     
-    /**
-     * Classe interne représentant un objet Tiled
-     */
+
     public static class TiledObject {
         private float x;
         private float y;
@@ -113,9 +105,7 @@ public class LevelData {
         public void setProperties(List<Property> properties) { this.properties = properties; }
     }
     
-    /**
-     * Classe interne représentant une propriété personnalisée
-     */
+
     public static class Property {
         private String name;
         private String type;
@@ -131,9 +121,7 @@ public class LevelData {
         public void setValue(Object value) { this.value = value; }
     }
     
-    /**
-     * Classe interne représentant un tileset
-     */
+
     public static class Tileset {
         private int firstgid;
         private String source;
@@ -181,9 +169,7 @@ public class LevelData {
         public void setTiles(List<TileInfo> tiles) { this.tiles = tiles; }
     }
     
-    /**
-     * Classe interne représentant les informations d'une tile
-     */
+
     public static class TileInfo {
         private int id;
         private List<Property> properties;

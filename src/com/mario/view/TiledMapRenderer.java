@@ -45,21 +45,6 @@ public class TiledMapRenderer {
         tiledRenderer.render();
     }
     
-    /**
-     * Render specific layers only
-     * @param level Level containing the TiledMap
-     * @param camera Camera for view
-     * @param layerIndices Indices of layers to render
-     */
-    public void renderLayers(Level level, OrthographicCamera camera, int[] layerIndices) {
-        if (!level.hasTiledMap() || tiledRenderer == null) {
-            return;
-        }
-        
-        tiledRenderer.setView(camera);
-        tiledRenderer.render(layerIndices);
-    }
-    
     public void dispose() {
         if (tiledRenderer != null) {
             tiledRenderer.dispose();

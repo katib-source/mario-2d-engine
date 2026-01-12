@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.mario.model.entity.Coin;
+import com.mario.model.entity.EndTrigger;
 import com.mario.model.entity.Enemy;
 import com.mario.model.entity.Entity;
 import com.mario.model.entity.Goomba;
@@ -30,6 +31,7 @@ public class GameController extends ApplicationAdapter {
     private boolean levelCompleted = false;
     private float levelCompleteTimer = 0f;
     private static final float LEVEL_COMPLETE_DELAY = 2.0f; // 2 seconds before loading next level
+    private String nextLevelPath = null; // Custom next level from EndTrigger
     
     @Override
     public void create() {
@@ -138,6 +140,9 @@ public class GameController extends ApplicationAdapter {
     
     private void handleInput() {
         if (currentLevel == null) return;
+        
+        // Block player movement input when level is completed
+        if (levelCompleted) return;
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
             if (currentLevel.getPlayer() == null || !currentLevel.getPlayer().isActive() || currentLevel.getPlayer().getLives() <= 0) {
@@ -165,15 +170,21 @@ public class GameController extends ApplicationAdapter {
         checkLevelCompletion(delta);
     }
     
-    /**
-     * Check if the player has reached the end of the level
-     */
+    /*Check if the player has reached the end of the level*/
     private void checkLevelCompletion(float delta) {
         if (currentLevel == null || currentLevel.getPlayer() == null) return;
+        
+        // If level already completed, count down to next level
         if (levelCompleted) {
             levelCompleteTimer += delta;
             if (levelCompleteTimer >= LEVEL_COMPLETE_DELAY) {
-                loadNextLevel();
+                // Load next level (custom path or default sequence)
+                if (nextLevelPath != null && !nextLevelPath.isEmpty()) {
+                    loadLevel("levels/" + nextLevelPath);
+                    nextLevelPath = null;
+                } else {
+                    loadNextLevel();
+                }
             }
             return;
         }
@@ -181,14 +192,26 @@ public class GameController extends ApplicationAdapter {
         Player player = currentLevel.getPlayer();
         if (!player.isActive()) return;
         
-        // Calculate level end position (90% of level width)
-        float levelEndX = (currentLevel.getWidth() * currentLevel.getTileWidth()) * 0.9f;
-        
-        // Check if player reached the end
-        if (player.getPosition().x >= levelEndX) {
-            levelCompleted = true;
-            levelCompleteTimer = 0f;
-            System.out.println("Level " + currentLevelNumber + " completed! Loading next level...");
+        // Check EndTrigger collision (preferred method)
+        EndTrigger endTrigger = currentLevel.getEndTrigger();
+        if (endTrigger != null) {
+            if (player.getBounds().overlaps(endTrigger.getBounds())) {
+                levelCompleted = true;
+                levelCompleteTimer = 0f;
+                nextLevelPath = endTrigger.getNextLevel();
+                System.out.println("Level " + currentLevelNumber + " completed! Loading next level...");
+                return;
+            }
+        } else {
+            // Fallback: Calculate level end position (90% of level width)
+            float levelEndX = (currentLevel.getWidth() * currentLevel.getTileWidth()) * 0.9f;
+            
+            // Check if player reached the end
+            if (player.getPosition().x >= levelEndX) {
+                levelCompleted = true;
+                levelCompleteTimer = 0f;
+                System.out.println("Level " + currentLevelNumber + " completed! Loading next level...");
+            }
         }
     }
     

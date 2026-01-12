@@ -1,5 +1,4 @@
 package com.mario.controller;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.mario.model.entity.Player;
@@ -9,9 +8,6 @@ public class InputHandler {
     private float jumpBufferTime = 0f;
     private static final float JUMP_BUFFER_DURATION = 0.15f; // 150ms buffer window
     
-    /**
-     * Update the input handler state (call this before handlePlayerInput)
-     */
     public void update(float deltaTime) {
         // Decrease jump buffer timer
         if (jumpBufferTime > 0) {

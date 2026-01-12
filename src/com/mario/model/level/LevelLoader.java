@@ -16,28 +16,21 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.mario.model.entity.Coin;
+import com.mario.model.entity.EndTrigger;
 import com.mario.model.entity.Entity;
 import com.mario.model.entity.Goomba;
 import com.mario.model.entity.Player;
 
-/**
- * Classe responsable du chargement des niveaux depuis les fichiers JSON Tiled
- * Pattern: Factory - Crée des entités à partir des données JSON
- */
+
 public class LevelLoader {
     private Gson gson;
     
     public LevelLoader() {
-        // Créer un GSON avec un désérialiseur personnalisé pour les couches
         this.gson = new GsonBuilder()
             .registerTypeAdapter(LevelData.Layer.class, new LayerDeserializer())
             .create();
     }
 
-    /**
-     * Désérialiseur personnalisé pour gérer les données de couche
-     * qui peuvent être soit un tableau d'entiers, soit une chaîne base64
-     */
     private static class LayerDeserializer implements JsonDeserializer<LevelData.Layer> {
         @Override
         public LevelData.Layer deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
@@ -156,6 +149,8 @@ public class LevelLoader {
                         loadTmxCoinLayer(layer, level);
                     } else if (layerName.contains("ground") || layerName.contains("collision")) {
                         loadTmxCollisionLayer(layer, level);
+                    } else if (layerName.equals("end")) {
+                        loadTmxEndTrigger(layer, level);
                     }
                 }
             }
@@ -216,6 +211,33 @@ public class LevelLoader {
             }
         }
         System.out.println("Loaded " + objectCount + " collision objects from layer: " + layer.getName());
+    }
+    
+    /**
+     * Load the end trigger from the "End" object layer
+     * Expects a RectangleMapObject with optional "nextLevel" property
+     */
+    private void loadTmxEndTrigger(com.badlogic.gdx.maps.MapLayer layer, Level level) {
+        for (com.badlogic.gdx.maps.MapObject object : layer.getObjects()) {
+            if (object instanceof com.badlogic.gdx.maps.objects.RectangleMapObject) {
+                Rectangle rect = ((com.badlogic.gdx.maps.objects.RectangleMapObject) object).getRectangle();
+                
+                // Create end trigger with the rectangle bounds (already in world units)
+                EndTrigger endTrigger = new EndTrigger(rect);
+                
+                // Check for optional "nextLevel" property
+                Object nextLevelProp = object.getProperties().get("nextLevel");
+                if (nextLevelProp != null) {
+                    endTrigger.setNextLevel(nextLevelProp.toString());
+                }
+                
+                level.setEndTrigger(endTrigger);
+                System.out.println("End trigger loaded at: " + rect.x + ", " + rect.y + 
+                    " (" + rect.width + "x" + rect.height + ")" +
+                    (endTrigger.hasNextLevel() ? " -> " + endTrigger.getNextLevel() : ""));
+                break; // Only one end trigger per level
+            }
+        }
     }
     
     /**

@@ -124,13 +124,6 @@ public class SpriteAnimator {
     }
     
     /**
-     * Get an animation by name
-     */
-    public Animation<TextureRegion> getAnimation(String name) {
-        return animations.get(name);
-    }
-    
-    /**
      * Get a static sprite by name
      */
     public TextureRegion getStaticSprite(String name) {

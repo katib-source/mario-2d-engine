@@ -282,16 +282,4 @@ public class GameRenderer {
         spriteAnimator.dispose();
         tiledMapRenderer.dispose();
     }
-    
-    public OrthographicCamera getCamera() {
-        return worldCamera;
-    }
-    
-    public OrthographicCamera getWorldCamera() {
-        return worldCamera;
-    }
-    
-    public OrthographicCamera getHudCamera() {
-        return hudCamera;
-    }
 }

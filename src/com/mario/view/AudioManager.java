@@ -103,34 +103,6 @@ public class AudioManager {
     }
     
     /**
-     * Toggle music on/off
-     */
-    public void toggleMusic() {
-        musicEnabled = !musicEnabled;
-        if (!musicEnabled && currentMusic != null) {
-            currentMusic.pause();
-        } else if (musicEnabled && currentMusic != null) {
-            currentMusic.play();
-        }
-    }
-    
-    /**
-     * Toggle sound effects on/off
-     */
-    public void toggleSound() {
-        soundEnabled = !soundEnabled;
-    }
-    
-    /**
-     * Set music volume
-     */
-    public void setMusicVolume(float volume) {
-        if (currentMusic != null) {
-            currentMusic.setVolume(volume);
-        }
-    }
-    
-    /**
      * Dispose of all audio resources
      */
     public void dispose() {

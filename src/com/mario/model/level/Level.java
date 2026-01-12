@@ -1,10 +1,10 @@
 package com.mario.model.level;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.math.Rectangle;
+import com.mario.model.entity.EndTrigger;
 import com.mario.model.entity.Entity;
 import com.mario.model.entity.Player;
 
@@ -17,11 +17,11 @@ public class Level {
     private List<Entity> entities;
     private List<Rectangle> solidTiles;
     private Player player;
+    private EndTrigger endTrigger;
     
     private List<TileLayer> tileLayers;
     private List<LevelData.Tileset> tilesets;
     
-    // NEW: Support for Tiled Map Editor
     private TiledMap tiledMap;
     
     public Level(int width, int height, int tileWidth, int tileHeight) {
@@ -129,6 +129,18 @@ public class Level {
     
     public boolean hasTiledMap() {
         return tiledMap != null;
+    }
+    
+    public EndTrigger getEndTrigger() {
+        return endTrigger;
+    }
+    
+    public void setEndTrigger(EndTrigger endTrigger) {
+        this.endTrigger = endTrigger;
+    }
+    
+    public boolean hasEndTrigger() {
+        return endTrigger != null;
     }
     
     public static class TileLayer {
