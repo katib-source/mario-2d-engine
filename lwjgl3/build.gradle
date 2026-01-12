@@ -1,0 +1,43 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+        resources {
+            srcDirs = ['src/main/resources', "${project.rootDir}/assets"]
+        }
+    }
+}
+
+application {
+    mainClass.set('com.mario.Lwjgl3Launcher')
+}
+
+dependencies {
+    implementation project(':core')
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:1.12.1"
+    implementation "com.badlogicgames.gdx:gdx-platform:1.12.1:natives-desktop"
+    implementation "com.badlogicgames.gdx:gdx-box2d-platform:1.12.1:natives-desktop"
+}
+
+tasks.named('run') {
+    standardInput = System.in
+    workingDir = project.rootDir
+}
+
+jar {
+    dependsOn(':core:jar')
+    manifest {
+        attributes 'Main-Class': 'com.mario.Lwjgl3Launcher'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}

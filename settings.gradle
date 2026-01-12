@@ -1,0 +1,4 @@
+rootProject.name = 'Mario-game'
+
+include 'core'
+include 'lwjgl3'
